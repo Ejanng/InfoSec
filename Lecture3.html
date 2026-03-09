@@ -1,5 +1,4 @@
-
-html_content = """<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -135,13 +134,14 @@ html_content = """<!DOCTYPE html>
             pointer-events: none;
         }
     </style>
+<base target="_blank">
 </head>
 <body class="min-h-screen">
     <div class="bg-grid"></div>
     <div class="glow-orb orb-1"></div>
     <div class="glow-orb orb-2"></div>
     <div class="glow-orb orb-3"></div>
-    
+
     <header class="relative z-10 p-6 border-b border-cyan-900/30 backdrop-blur-md">
         <div class="max-w-7xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -279,7 +279,7 @@ html_content = """<!DOCTYPE html>
                         <div class="px-4 py-2 rounded-lg bg-cyan-900/30 text-cyan-400 text-sm font-mono"><span id="flashcard-counter">1 / 20</span></div>
                     </div>
                 </div>
-                
+
                 <div class="flashcard-container mb-6" onclick="flipCard()">
                     <div class="flashcard" id="flashcard">
                         <div class="flashcard-face flashcard-front">
@@ -318,7 +318,7 @@ html_content = """<!DOCTYPE html>
                 <div class="cyber-card rounded-xl p-8 mb-6">
                     <div class="mb-2 text-cyan-400 text-sm font-mono" id="quiz-category">Category</div>
                     <h3 class="text-xl font-bold mb-6" id="quiz-question">Loading question...</h3>
-                    
+
                     <div class="space-y-3" id="quiz-options"></div>
 
                     <div id="quiz-explanation" class="mt-6 p-4 rounded-lg bg-slate-800/50 border border-slate-700 hidden">
@@ -372,7 +372,7 @@ html_content = """<!DOCTYPE html>
                             <div class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
                             <span class="text-red-400 font-mono text-sm animate-pulse">LIVE THREAT DETECTED</span>
                         </div>
-                        
+
                         <h3 class="text-xl font-bold mb-4" id="scenario-title">The Attack Begins</h3>
                         <p class="text-slate-300 mb-6 leading-relaxed" id="scenario-text">You are a security analyst at a major bank. An alert just came in: An unknown IP address is attempting to log in using an executive's credentials.</p>
 
@@ -619,13 +619,13 @@ html_content = """<!DOCTYPE html>
             const explanation = document.getElementById('quiz-explanation');
             const expTitle = document.getElementById('explanation-title');
             const expText = document.getElementById('explanation-text');
-            
+
             options.forEach((opt, i) => {
                 opt.style.pointerEvents = 'none';
                 if (i === q.correct) opt.classList.add('correct');
                 else if (i === idx && i !== q.correct) opt.classList.add('wrong');
             });
-            
+
             if (idx === q.correct) {
                 quizScore.correct++;
                 totalScore += 20;
@@ -639,7 +639,7 @@ html_content = """<!DOCTYPE html>
                 expTitle.textContent = '❌ Incorrect';
                 expTitle.className = 'font-semibold mb-2 text-red-400';
             }
-            
+
             expText.textContent = q.explanation;
             explanation.classList.remove('hidden');
             document.getElementById('next-btn').classList.remove('hidden');
@@ -696,7 +696,7 @@ html_content = """<!DOCTYPE html>
                 const card1 = matchingState.cards[matchingState.selected];
                 const card2 = matchingState.cards[idx];
                 matchingState.moves++;
-                
+
                 if (card1.matchId === card2.matchId) {
                     matchingState.matched.add(card1.matchId);
                     totalScore += 50;
@@ -757,15 +757,15 @@ html_content = """<!DOCTYPE html>
             const feedback = document.getElementById('scenario-feedback');
             const feedbackTitle = document.getElementById('feedback-title');
             const feedbackText = document.getElementById('feedback-text');
-            
+
             document.querySelectorAll('#scenario-options button').forEach(btn => btn.style.pointerEvents = 'none');
-            
+
             feedback.classList.remove('hidden');
             feedbackTitle.textContent = option.correct ? '✅ Correct Action' : '❌ Incorrect';
             feedbackTitle.className = `font-semibold mb-2 ${option.correct ? 'text-green-400' : 'text-red-400'}`;
             feedbackText.textContent = option.feedback;
             feedback.className = `mt-6 p-4 rounded-lg border ${option.correct ? 'bg-green-900/20 border-green-500/30' : 'bg-red-900/20 border-red-500/30'}`;
-            
+
             if (option.correct) {
                 totalScore += 30;
                 streak++;
@@ -874,12 +874,12 @@ html_content = """<!DOCTYPE html>
             const flashPercent = (knownCards.size / flashcards.length) * 100;
             document.getElementById('flash-progress').textContent = `${knownCards.size}/${flashcards.length}`;
             document.getElementById('flash-bar').style.width = `${flashPercent}%`;
-            
+
             const quizTotal = quizScore.correct + quizScore.wrong;
             const quizPercent = quizTotal > 0 ? (quizScore.correct / quizTotal) * 100 : 0;
             document.getElementById('quiz-progress').textContent = `${Math.round(quizPercent)}%`;
             document.getElementById('quiz-bar').style.width = `${quizPercent}%`;
-            
+
             const matchPairs = matchingState.matched ? matchingState.matched.size : 0;
             document.getElementById('match-progress').textContent = `${matchPairs}/5`;
             document.getElementById('match-bar').style.width = `${(matchPairs / 5) * 100}%`;
@@ -901,11 +901,4 @@ html_content = """<!DOCTYPE html>
         init();
     </script>
 </body>
-</html>"""
-
-# Save the file
-with open('/mnt/kimi/output/cybersecurity_iaaa_reviewer.html', 'w', encoding='utf-8') as f:
-    f.write(html_content)
-
-print("Interactive reviewer created successfully!")
-print("File saved to: /mnt/kimi/output/cybersecurity_iaaa_reviewer.html")
+</html>
