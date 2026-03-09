@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cybersecurity CIA & MSR Model Interactive Reviewer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+        }
+        
+        .font-display {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        /* 3D Flip Card Styles */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .flip-card-back {
+            transform: rotateY(180deg);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b; 
+        }
+
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.8); }
+        }
+        
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .animate-pulse-glow {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        /* Progress Bar Animation */
+        .progress-fill {
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Tab Transitions */
+        .tab-content {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        
+        .tab-content.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* House Visualization */
+        .house-part {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .house-part:hover {
+            filter: brightness(1.2);
+            transform: scale(1.02);
+        }
+        
+        .confidentiality-layer { fill: #3b82f6; }
+        .integrity-layer { fill: #10b981; }
+        .availability-layer { fill: #f59e0b; }
+        
+        .highlight-confidentiality { filter: drop-shadow(0 0 15px #3b82f6); }
+        .highlight-integrity { filter: drop-shadow(0 0 15px #10b981); }
+        .highlight-availability { filter: drop-shadow(0 0 15px #f59e0b); }
+
+        /* Quiz Option Styles */
+        .quiz-option {
+            transition: all 0.2s ease;
+        }
+        .quiz-option:hover:not(.disabled) {
+            transform: translateX(8px);
+            background: rgba(59, 130, 246, 0.1);
+        }
+        .quiz-option.correct {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: #10b981;
+        }
+        .quiz-option.incorrect {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #ef4444;
+        }
+    </style>
+</head>
+<body class="text-slate-200 overflow-x-hidden">
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 glass border-b border-slate-700/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center font-bold text-white">C</div>
+                    <span class="font-display font-bold text-xl tracking-tight text-white">CyberReview</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <button onclick="switchTab('dashboard')" class="nav-btn text-sm font-medium hover:text-blue-400 transition-colors text-blue-400" data-tab="dashboard">Dashboard</button>
+                    <button onclick="switchTab('flashcards')" class="nav-btn text-sm font-medium hover:text-blue-400 transition-colors text-slate-400" data-tab="flashcards">Flashcards</button>
+                    <button onclick="switchTab('visual')" class="nav-btn text-sm font-medium hover:text-blue-400 transition-colors text-slate-400" data-tab="visual">Visual Learning</button>
+                    <button onclick="switchTab('quiz')" class="nav-btn text-sm font-medium hover:text-blue-400 transition-colors text-slate-400" data-tab="quiz">Quiz</button>
+                </div>
+                <div class="md:hidden">
+                    <button onclick="toggleMobileMenu()" class="text-slate-300 hover:text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="hidden md:hidden glass border-t border-slate-700/50">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <button onclick="switchTab('dashboard')" class="block w-full text-left px-3 py-2 rounded-md text-base font-medium hover:bg-slate-700">Dashboard</button>
+                <button onclick="switchTab('flashcards')" class="block w-full text-left px-3 py-2 rounded-md text-base font-medium hover:bg-slate-700">Flashcards</button>
+                <button onclick="switchTab('visual')" class="block w-full text-left px-3 py-2 rounded-md text-base font-medium hover:bg-slate-700">Visual Learning</button>
+                <button onclick="switchTab('quiz')" class="block w-full text-left px-3 py-2 rounded-md text-base font-medium hover:bg-slate-700">Quiz</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-20 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <div class="text-center mb-12 animate-float">
+                <h1 class="font-display text-5xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 mb-4">
+                    CIA Triad & MSR Model
+                </h1>
+                <p class="text-xl text-slate-400 max-w-2xl mx-auto">
+                    Master the fundamentals of information security through interactive learning
+                </p>
+            </div>
+
+            <!-- Progress Overview -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <div class="glass rounded-2xl p-6 border-l-4 border-blue-500">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-display font-bold text-lg text-blue-400">Confidentiality</h3>
+                        <span class="text-2xl">🔒</span>
+                    </div>
+                    <div class="w-full bg-slate-700 rounded-full h-2 mb-2">
+                        <div id="prog-conf" class="progress-fill bg-blue-500 h-2 rounded-full" style="width: 0%"></div>
+                    </div>
+                    <p class="text-sm text-slate-400">Ensure sensitive info is accessible only to authorized</p>
+                </div>
+
+                <div class="glass rounded-2xl p-6 border-l-4 border-emerald-500">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-display font-bold text-lg text-emerald-400">Integrity</h3>
+                        <span class="text-2xl">🛡️</span>
+                    </div>
+                    <div class="w-full bg-slate-700 rounded-full h-2 mb-2">
+                        <div id="prog-integ" class="progress-fill bg-emerald-500 h-2 rounded-full" style="width: 0%"></div>
+                    </div>
+                    <p class="text-sm text-slate-400">Ensure information remains accurate and complete</p>
+                </div>
+
+                <div class="glass rounded-2xl p-6 border-l-4 border-amber-500">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-display font-bold text-lg text-amber-400">Availability</h3>
+                        <span class="text-2xl">⚡</span>
+                    </div>
+                    <div class="w-full bg-slate-700 rounded-full h-2 mb-2">
+                        <div id="prog-avail" class="progress-fill bg-amber-500 h-2 rounded-full" style="width: 0%"></div>
+                    </div>
+                    <p class="text-sm text-slate-400">Ensure systems and data are accessible when needed</p>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="glass rounded-2xl p-8 mb-8">
+                <h2 class="font-display text-2xl font-bold mb-6 text-white">Study Overview</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="text-center p-4 bg-slate-800/50 rounded-xl">
+                        <div id="stat-flashcards" class="text-3xl font-bold text-purple-400">0/12</div>
+                        <div class="text-sm text-slate-400 mt-1">Flashcards Reviewed</div>
+                    </div>
+                    <div class="text-center p-4 bg-slate-800/50 rounded-xl">
+                        <div id="stat-quiz" class="text-3xl font-bold text-pink-400">0%</div>
+                        <div class="text-sm text-slate-400 mt-1">Quiz Score</div>
+                    </div>
+                    <div class="text-center p-4 bg-slate-800/50 rounded-xl">
+                        <div id="stat-time" class="text-3xl font-bold text-cyan-400">0m</div>
+                        <div class="text-sm text-slate-400 mt-1">Study Time</div>
+                    </div>
+                    <div class="text-center p-4 bg-slate-800/50 rounded-xl">
+                        <div id="stat-mastery" class="text-3xl font-bold text-green-400">Beginner</div>
+                        <div class="text-sm text-slate-400 mt-1">Level</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Start Buttons -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button onclick="switchTab('flashcards')" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 to-blue-800 p-6 text-left transition-all hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/25">
+                    <div class="relative z-10">
+                        <div class="mb-2 text-3xl">🎴</div>
+                        <h3 class="font-display text-xl font-bold text-white mb-1">Flashcards</h3>
+                        <p class="text-blue-200 text-sm">12 cards covering CIA, MSR, and countermeasures</p>
+                    </div>
+                    <div class="absolute inset-0 bg-gradient-to-br from-blue-400 to-transparent opacity-0 group-hover:opacity-20 transition-opacity"></div>
+                </button>
+
+                <button onclick="switchTab('visual')" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 to-purple-800 p-6 text-left transition-all hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/25">
+                    <div class="relative z-10">
+                        <div class="mb-2 text-3xl">🏠</div>
+                        <h3 class="font-display text-xl font-bold text-white mb-1">House Analogy</h3>
+                        <p class="text-purple-200 text-sm">Interactive visualization of security concepts</p>
+                    </div>
+                    <div class="absolute inset-0 bg-gradient-to-br from-purple-400 to-transparent opacity-0 group-hover:opacity-20 transition-opacity"></div>
+                </button>
+
+                <button onclick="switchTab('quiz')" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-pink-600 to-rose-800 p-6 text-left transition-all hover:scale-105 hover:shadow-2xl hover:shadow-pink-500/25">
+                    <div class="relative z-10">
+                        <div class="mb-2 text-3xl">🎯</div>
+                        <h3 class="font-display text-xl font-bold text-white mb-1">Knowledge Check</h3>
+                        <p class="text-pink-200 text-sm">Test your understanding with 10 questions</p>
+                    </div>
+                    <div class="absolute inset-0 bg-gradient-to-br from-pink-400 to-transparent opacity-0 group-hover:opacity-20 transition-opacity"></div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Flashcards Tab -->
+        <div id="flashcards" class="tab-content">
+            <div class="max-w-4xl mx-auto">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="font-display text-3xl font-bold text-white">Security Flashcards</h2>
+                    <div class="flex items-center gap-4">
+                        <span id="card-counter" class="text-slate-400 font-mono">1 / 12</span>
+                        <button onclick="shuffleCards()" class="p-2 rounded-lg bg-slate-700 hover:bg-slate-600 transition-colors" title="Shuffle">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Flashcard Container -->
+                <div class="perspective-1000 h-96 mb-8 cursor-pointer" onclick="flipCard()">
+                    <div id="flashcard" class="flip-card flip-card-inner glass rounded-2xl shadow-2xl">
+                        <!-- Front -->
+                        <div class="flip-card-front bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700">
+                            <div id="card-category" class="absolute top-6 left-6 px-3 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                                CIA TRIAD
+                            </div>
+                            <div id="card-question" class="text-2xl md:text-3xl font-display font-bold text-white text-center px-8">
+                                What is the primary goal of Confidentiality?
+                            </div>
+                            <div class="absolute bottom-6 text-slate-500 text-sm animate-pulse">
+                                Click to flip
+                            </div>
+                        </div>
+                        
+                        <!-- Back -->
+                        <div class="flip-card-back bg-gradient-to-br from-slate-700 to-slate-800 border border-slate-600">
+                            <div id="card-answer" class="text-xl text-slate-200 text-center px-8 leading-relaxed">
+                                Ensure that sensitive information is accessible only to authorized individuals
+                            </div>
+                            <div id="card-details" class="mt-6 text-sm text-slate-400 max-w-lg">
+                                <strong>Key threats:</strong> Unauthorized access, data leaks, eavesdropping<br>
+                                <strong>Countermeasures:</strong> Encryption, Access Controls, Data Masking
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controls -->
+                <div class="flex justify-center gap-4">
+                    <button onclick="prevCard()" class="px-6 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-medium transition-all flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                        Previous
+                    </button>
+                    <button onclick="markKnown()" id="btn-known" class="px-6 py-3 rounded-xl bg-emerald-600/20 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-600/30 font-medium transition-all">
+                        Mark as Known
+                    </button>
+                    <button onclick="nextCard()" class="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium transition-all flex items-center gap-2">
+                        Next
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                </div>
+
+                <!-- Card Progress -->
+                <div class="mt-8 flex justify-center gap-2 flex-wrap" id="card-indicators">
+                    <!-- Generated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Visual Learning Tab -->
+        <div id="visual" class="tab-content">
+            <div class="max-w-6xl mx-auto">
+                <h2 class="font-display text-3xl font-bold text-white mb-2">Interactive House Analogy</h2>
+                <p class="text-slate-400 mb-8">Click on different parts of the house to understand security concepts</p>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Interactive House SVG -->
+                    <div class="glass rounded-2xl p-8 relative overflow-hidden">
+                        <svg viewBox="0 0 400 400" class="w-full h-auto drop-shadow-2xl">
+                            <!-- Ground -->
+                            <rect x="0" y="350" width="400" height="50" fill="#334155"/>
+                            
+                            <!-- House Base -->
+                            <rect x="100" y="200" width="200" height="150" fill="#475569" class="house-part" onclick="showConcept('storage')" onmouseenter="highlight('storage')" onmouseleave="unhighlight()"/>
+                            
+                            <!-- Roof -->
+                            <polygon points="80,200 200,120 320,200" fill="#64748b" class="house-part" onclick="showConcept('integrity')" onmouseenter="highlight('integrity')" onmouseleave="unhighlight()"/>
+                            
+                            <!-- Door -->
+                            <rect x="170" y="280" width="60" height="70" fill="#1e293b" stroke="#94a3b8" stroke-width="2" class="house-part" onclick="showConcept('confidentiality')" onmouseenter="highlight('confidentiality')" onmouseleave="unhighlight()"/>
+                            <circle cx="220" cy="315" r="3" fill="#fbbf24"/>
+                            
+                            <!-- Windows -->
+                            <rect x="120" y="230" width="40" height="40" fill="#1e293b" stroke="#3b82f6" stroke-width="2" class="house-part confidentiality-layer" onclick="showConcept('confidentiality')" onmouseenter="highlight('confidentiality')" onmouseleave="unhighlight()"/>
+                            <line x1="140" y1="230" x2="140" y2="270" stroke="#3b82f6" stroke-width="2"/>
+                            <line x1="120" y1="250" x2="160" y2="250" stroke="#3b82f6" stroke-width="2"/>
+                            
+                            <rect x="240" y="230" width="40" height="40" fill="#1e293b" stroke="#3b82f6" stroke-width="2" class="house-part confidentiality-layer" onclick="showConcept('confidentiality')" onmouseenter="highlight('confidentiality')" onmouseleave="unhighlight()"/>
+                            <line x1="260" y1="230" x2="260" y2="270" stroke="#3b82f6" stroke-width="2"/>
+                            <line x1="240" y1="250" x2="280" y2="250" stroke="#3b82f6" stroke-width="2"/>
+                            
+                            <!-- Chimney -->
+                            <rect x="260" y="140" width="30" height="60" fill="#64748b"/>
+                            
+                            <!-- Safe (Storage) -->
+                            <rect x="130" y="320" width="30" height="30" rx="2" fill="#334155" stroke="#f59e0b" stroke-width="2" class="house-part" onclick="showConcept('storage')" onmouseenter="highlight('storage')" onmouseleave="unhighlight()"/>
+                            <circle cx="145" cy="335" r="4" fill="#f59e0b"/>
+                            
+                            <!-- Path/Transmission -->
+                            <path d="M 320 350 Q 360 350 380 300" stroke="#10b981" stroke-width="3" fill="none" stroke-dasharray="5,5" class="house-part" onclick="showConcept('transmission')" onmouseenter="highlight('transmission')" onmouseleave="unhighlight()"/>
+                            <polygon points="375,305 385,295 375,285" fill="#10b981" transform="rotate(45 380 300)"/>
+                            
+                            <!-- Cloud/Processing -->
+                            <ellipse cx="320" cy="100" rx="40" ry="25" fill="#6366f1" opacity="0.8" class="house-part" onclick="showConcept('processing')" onmouseenter="highlight('processing')" onmouseleave="unhighlight()"/>
+                            <ellipse cx="340" cy="90" rx="30" ry="20" fill="#6366f1" opacity="0.6"/>
+                            <ellipse cx="300" cy="90" rx="30" ry="20" fill="#6366f1" opacity="0.6"/>
+                            
+                            <!-- Labels -->
+                            <text x="200" y="380" text-anchor="middle" fill="#94a3b8" font-size="12" font-family="Inter">Click elements to explore</text>
+                        </svg>
+
+                        <!-- Legend -->
+                        <div class="mt-6 grid grid-cols-2 gap-2 text-sm">
+                            <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-blue-500"></div><span class="text-slate-300">Confidentiality</span></div>
+                            <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-emerald-500"></div><span class="text-slate-300">Integrity/Transmission</span></div>
+                            <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-amber-500"></div><span class="text-slate-300">Availability/Storage</span></div>
+                            <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-indigo-500"></div><span class="text-slate-300">Processing</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Info Panel -->
+                    <div class="glass rounded-2xl p-8">
+                        <div id="concept-display" class="h-full flex flex-col">
+                            <div class="mb-4">
+                                <span id="concept-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-slate-700 text-slate-300">SELECT A CONCEPT</span>
+                            </div>
+                            <h3 id="concept-title" class="font-display text-2xl font-bold text-white mb-4">Explore the House</h3>
+                            <p id="concept-desc" class="text-slate-300 leading-relaxed mb-6">
+                                Click on different parts of the house to learn about CIA Triad components and MSR Model states. Each element represents a specific security concept from your lecture.
+                            </p>
+                            
+                            <div id="concept-details" class="hidden space-y-4">
+                                <div class="bg-slate-800/50 rounded-lg p-4 border-l-4 border-blue-500">
+                                    <h4 class="font-bold text-blue-400 mb-2">Analogy</h4>
+                                    <p id="concept-analogy" class="text-sm text-slate-300"></p>
+                                </div>
+                                <div class="bg-slate-800/50 rounded-lg p-4 border-l-4 border-purple-500">
+                                    <h4 class="font-bold text-purple-400 mb-2">Real World Implementation</h4>
+                                    <ul id="concept-examples" class="text-sm text-slate-300 space-y-1 list-disc list-inside"></ul>
+                                </div>
+                            </div>
+
+                            <div id="concept-placeholder" class="flex-1 flex items-center justify-center opacity-50">
+                                <svg class="w-24 h-24 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MSR Model Deep Dive -->
+                <div class="mt-8 glass rounded-2xl p-8">
+                    <h3 class="font-display text-2xl font-bold text-white mb-6">MSR Model: Information States & Safeguards</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-slate-800/50 rounded-xl p-6 border border-slate-700 hover:border-blue-500/50 transition-colors group">
+                            <div class="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>
+                            </div>
+                            <h4 class="font-bold text-white mb-2">Storage</h4>
+                            <p class="text-sm text-slate-400 mb-3">Data at rest - locked in a safe inside the house</p>
+                            <ul class="text-xs text-slate-500 space-y-1">
+                                <li>• Encryption (AES)</li>
+                                <li>• Access Controls</li>
+                                <li>• Physical Security</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-slate-800/50 rounded-xl p-6 border border-slate-700 hover:border-emerald-500/50 transition-colors group">
+                            <div class="w-12 h-12 rounded-lg bg-emerald-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                            </div>
+                            <h4 class="font-bold text-white mb-2">Transmission</h4>
+                            <p class="text-sm text-slate-400 mb-3">Data in transit - securely sending valuables to bank</p>
+                            <ul class="text-xs text-slate-500 space-y-1">
+                                <li>• TLS/SSL Protocols</li>
+                                <li>• VPNs</li>
+                                <li>• Digital Signatures</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-slate-800/50 rounded-xl p-6 border border-slate-700 hover:border-purple-500/50 transition-colors group">
+                            <div class="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                            </div>
+                            <h4 class="font-bold text-white mb-2">Processing</h4>
+                            <p class="text-sm text-slate-400 mb-3">Data in use - opening safe, counting cash</p>
+                            <ul class="text-xs text-slate-500 space-y-1">
+                                <li>• Memory Protection</li>
+                                <li>• Secure Enclaves</li>
+                                <li>• Input Validation</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiz Tab -->
+        <div id="quiz" class="tab-content">
+            <div class="max-w-3xl mx-auto">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="font-display text-3xl font-bold text-white">Knowledge Check</h2>
+                    <div class="flex items-center gap-4">
+                        <div class="text-right">
+                            <div class="text-sm text-slate-400">Score</div>
+                            <div id="quiz-score" class="text-2xl font-bold text-emerald-400">0/0</div>
+                        </div>
+                        <div class="w-16 h-16 relative">
+                            <svg class="w-full h-full transform -rotate-90">
+                                <circle cx="32" cy="32" r="28" stroke="#334155" stroke-width="4" fill="none"/>
+                                <circle id="quiz-progress" cx="32" cy="32" r="28" stroke="#3b82f6" stroke-width="4" fill="none" stroke-dasharray="175.9" stroke-dashoffset="175.9" class="transition-all duration-500"/>
+                            </svg>
+                            <div id="quiz-question-num" class="absolute inset-0 flex items-center justify-center font-bold text-sm">1/10</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quiz Container -->
+                <div id="quiz-container" class="glass rounded-2xl p-8 min-h-[400px] flex flex-col">
+                    <!-- Question -->
+                    <div id="quiz-question" class="text-xl md:text-2xl font-medium text-white mb-8">
+                        Loading question...
+                    </div>
+
+                    <!-- Options -->
+                    <div id="quiz-options" class="space-y-3 flex-1">
+                        <!-- Generated by JS -->
+                    </div>
+
+                    <!-- Feedback -->
+                    <div id="quiz-feedback" class="hidden mt-6 p-4 rounded-lg border">
+                        <div class="flex items-start gap-3">
+                            <div id="feedback-icon" class="text-2xl"></div>
+                            <div>
+                                <div id="feedback-title" class="font-bold mb-1"></div>
+                                <div id="feedback-text" class="text-sm text-slate-300"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Navigation -->
+                    <div class="mt-8 flex justify-between">
+                        <button onclick="resetQuiz()" class="px-4 py-2 rounded-lg text-slate-400 hover:text-white transition-colors text-sm">
+                            Reset Quiz
+                        </button>
+                        <button id="quiz-next-btn" onclick="nextQuestion()" class="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium transition-all hidden">
+                            Next Question →
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Results Screen (Hidden initially) -->
+                <div id="quiz-results" class="hidden glass rounded-2xl p-8 text-center">
+                    <div class="text-6xl mb-4">🎉</div>
+                    <h3 class="font-display text-3xl font-bold text-white mb-2">Quiz Complete!</h3>
+                    <p class="text-slate-400 mb-6">Here's how you performed</p>
+                    
+                    <div class="grid grid-cols-3 gap-4 mb-8">
+                        <div class="bg-slate-800/50 rounded-xl p-4">
+                            <div id="result-correct" class="text-3xl font-bold text-emerald-400">0</div>
+                            <div class="text-sm text-slate-400">Correct</div>
+                        </div>
+                        <div class="bg-slate-800/50 rounded-xl p-4">
+                            <div id="result-total" class="text-3xl font-bold text-white">0</div>
+                            <div class="text-sm text-slate-400">Total</div>
+                        </div>
+                        <div class="bg-slate-800/50 rounded-xl p-4">
+                            <div id="result-percent" class="text-3xl font-bold text-blue-400">0%</div>
+                            <div class="text-sm text-slate-400">Accuracy</div>
+                        </div>
+                    </div>
+
+                    <div id="result-message" class="text-lg text-slate-300 mb-8"></div>
+
+                    <div class="flex justify-center gap-4">
+                        <button onclick="resetQuiz()" class="px-6 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-medium transition-all">
+                            Try Again
+                        </button>
+                        <button onclick="switchTab('flashcards')" class="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium transition-all">
+                            Review Flashcards
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Data
+        const flashcardsData = [
+            {
+                category: "CONFIDENTIALITY",
+                color: "blue",
+                question: "What is the primary goal of Confidentiality?",
+                answer: "Ensure that sensitive information is accessible only to authorized individuals",
+                details: "Key threats: Unauthorized access, data leaks, eavesdropping<br>Countermeasures: Encryption (AES, TLS), Access Controls (RBAC), Data Masking, Network Segmentation"
+            },
+            {
+                category: "INTEGRITY",
+                color: "emerald",
+                question: "What does Integrity ensure in information security?",
+                answer: "Information remains accurate, complete, and unaltered",
+                details: "Key threats: Data manipulation, transmission errors<br>Countermeasures: Cryptographic Hashing (SHA-256), Digital Signatures, Audit Trails, Redundant Storage (RAID)"
+            },
+            {
+                category: "AVAILABILITY",
+                color: "amber",
+                question: "What is the objective of Availability?",
+                answer: "Ensure systems and data are accessible when needed",
+                details: "Key threats: DoS/DDoS attacks, hardware failures, natural disasters<br>Countermeasures: Redundancy, Failover Systems, DDoS Mitigation, Regular Backups, Disaster Recovery Plans"
+            },
+            {
+                category: "AUTHENTICATION",
+                color: "purple",
+                question: "What does Authentication verify?",
+                answer: "That users and systems are who they claim to be",
+                details: "Key threats: Impersonation, stolen credentials, weak passwords<br>Countermeasures: Multi-Factor Authentication (MFA), Strong Password Policies, Biometrics, Session Management"
+            },
+            {
+                category: "NON-REPUDIATION",
+                color: "pink",
+                question: "What does Non-repudiation prevent?",
+                answer: "Individuals from denying actions or transactions they performed",
+                details: "Key threats: Fraudulent denial of sending messages or completing transactions<br>Countermeasures: Digital Signatures, PKI, Transaction Logs, Time Stamping"
+            },
+            {
+                category: "MSR MODEL",
+                color: "indigo",
+                question: "What are the three Information States in the MSR Model?",
+                answer: "Storage, Transmission, and Processing",
+                details: "Storage: Data at rest (locked safe)<br>Transmission: Data in transit (secure transport)<br>Processing: Data in use (active operations)"
+            },
+            {
+                category: "MSR MODEL",
+                color: "indigo",
+                question: "What are the four Safeguards in the MSR Model?",
+                answer: "Policies, Procedures, Practices, and Technologies",
+                details: "Policies: Rules set (e.g., 'Always lock the door')<br>Procedures: Steps taken (e.g., check alarm)<br>Practices: Habits (e.g., never share keys)<br>Technologies: Tools (smart locks, cameras)"
+            },
+            {
+                category: "INTEGRATED",
+                color: "rose",
+                question: "What are examples of Integrated Countermeasures?",
+                answer: "IDPS, Zero Trust Architecture, and Regular Security Audits",
+                details: "These protect against threats targeting multiple CIA elements simultaneously (e.g., ransomware attacks confidentiality, integrity, and availability)"
+            },
+            {
+                category: "HOUSE ANALOGY",
+                color: "cyan",
+                question: "In the house analogy, what represents Confidentiality?",
+                answer: "Locks, curtains, security systems, and burglar alarms",
+                details: "These ensure only authorized people (homeowners) can enter or see inside, preventing snooping or unauthorized access by outsiders"
+            },
+            {
+                category: "HOUSE ANALOGY",
+                color: "cyan",
+                question: "In the house analogy, what represents Integrity?",
+                answer: "Well-maintained structure and unchanged documents",
+                details: "Ensuring the house's structure (walls, roof, plumbing) is maintained and nothing inside (furniture, documents) is tampered with or damaged"
+            },
+            {
+                category: "HOUSE ANALOGY",
+                color: "cyan",
+                question: "In the house analogy, what represents Availability?",
+                answer: "Accessible amenities and spare keys",
+                details: "Ensuring the house and its amenities (water, electricity, internet, door access) are always accessible when needed, including backup access methods"
+            },
+            {
+                category: "POLP",
+                color: "orange",
+                question: "What is the Principle of Least Privilege (POLP)?",
+                answer: "Giving users only the minimum levels of access/permissions needed for their job",
+                details: "A key access control principle that limits potential damage from accidents, errors, or unauthorized use by restricting access rights"
+            }
+        ];
+
+        const quizData = [
+            {
+                question: "Which encryption protocol is recommended for data in transit?",
+                options: ["AES", "TLS", "SHA-256", "RSA"],
+                correct: 1,
+                explanation: "TLS (Transport Layer Security) is specifically designed for securing data in transit, while AES is typically used for data at rest."
+            },
+            {
+                question: "What is the primary purpose of cryptographic hashing (SHA-256)?",
+                options: ["Encrypt data for storage", "Verify data has not been altered", "Speed up data transmission", "Compress data size"],
+                correct: 1,
+                explanation: "Hashing ensures integrity by creating a unique fingerprint of data that changes if the data is modified."
+            },
+            {
+                question: "Which threat primarily targets Availability?",
+                options: ["Phishing", "Man-in-the-middle", "DDoS attack", "SQL Injection"],
+                correct: 2,
+                explanation: "Distributed Denial of Service (DDoS) attacks overwhelm systems to make them unavailable to legitimate users."
+            },
+            {
+                question: "In the MSR Model, 'Data in use' corresponds to which state?",
+                options: ["Storage", "Transmission", "Processing", "Archival"],
+                correct: 2,
+                explanation: "Processing refers to data being actively used or processed, like when opening a safe to retrieve documents."
+            },
+            {
+                question: "What does Non-repudiation primarily prevent?",
+                options: ["Data theft", "Identity denial", "System crashes", "Unauthorized access"],
+                correct: 1,
+                explanation: "Non-repudiation ensures individuals cannot deny actions they performed, using digital signatures and audit logs."
+            },
+            {
+                question: "Which safeguard category includes 'habits like never sharing house keys'?",
+                options: ["Policies", "Procedures", "Practices", "Technologies"],
+                correct: 2,
+                explanation: "Practices refer to habitual behaviors and security culture, as opposed to formal policies or specific technologies."
+            },
+            {
+                question: "What does RBAC stand for in access control?",
+                options: ["Random Based Access Control", "Role-Based Access Control", "Root-Based Access Control", "Read-Based Access Control"],
+                correct: 1,
+                explanation: "Role-Based Access Control (RBAC) limits system access based on user roles within an organization."
+            },
+            {
+                question: "Which countermeasure protects against multiple CIA elements simultaneously?",
+                options: ["Data Masking", "Zero Trust Architecture", "Biometric Auth", "Time Stamping"],
+                correct: 1,
+                explanation: "Zero Trust Architecture assumes no user or system is trusted by default, protecting confidentiality, integrity, and availability together."
+            },
+            {
+                question: "In the house analogy, what represents 'Transmission'?",
+                options: ["The safe inside", "The locks on doors", "Securely sending valuables to bank", "The roof structure"],
+                correct: 2,
+                explanation: "Transmission is like securely sending valuables to a bank or transferring them to another house - ensuring safety while in transit."
+            },
+            {
+                question: "What is POLP?",
+                options: ["Principle of Least Privilege", "Protocol of Last Protection", "Policy of Limited Permission", "Procedure of Low Priority"],
+                correct: 0,
+                explanation: "Principle of Least Privilege (POLP) ensures users get minimum access necessary, reducing security risks."
+            }
+        ];
+
+        const conceptDetails = {
+            confidentiality: {
+                title: "Confidentiality",
+                badge: "CIA TRIAD",
+                badgeColor: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+                desc: "Ensures sensitive information is accessible only to authorized individuals. Like ensuring only homeowners can enter the house.",
+                analogy: "Locks, curtains, security systems, and burglar alarms ensure only authorized people can enter or see inside the house. It prevents snooping or access by outsiders.",
+                examples: ["Encryption (AES for storage, TLS for transit)", "Access Controls (RBAC, POLP)", "Data Masking in test environments", "Network Segmentation"]
+            },
+            integrity: {
+                title: "Integrity",
+                badge: "CIA TRIAD",
+                badgeColor: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+                desc: "Ensures information remains accurate, complete, and unaltered. Like maintaining the house structure and ensuring documents aren't tampered with.",
+                analogy: "Making sure the house's structure (walls, roof, plumbing) is well-maintained and nothing inside (furniture, documents) is tampered with or damaged.",
+                examples: ["Cryptographic Hashing (SHA-256)", "Digital Signatures for authentication", "Audit Trails and tamper-proof logs", "RAID configurations for redundancy"]
+            },
+            availability: {
+                title: "Availability",
+                badge: "CIA TRIAD",
+                badgeColor: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+                desc: "Ensures systems and data are accessible when needed. Like ensuring you can always enter the house and use its amenities.",
+                analogy: "Ensuring the house and its amenities (water, electricity, internet, door access) are always accessible when needed. Having spare keys for backup access.",
+                examples: ["Redundancy and Failover Systems", "DDoS Mitigation and traffic filtering", "Regular Backups in distributed locations", "Disaster Recovery Plans"]
+            },
+            storage: {
+                title: "Storage (Data at Rest)",
+                badge: "MSR STATE",
+                badgeColor: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+                desc: "Information stored in a safe or database. Security focuses on protecting data while not being actively used.",
+                analogy: "Valuables locked in a safe inside the house. The safe protects items even when you're not actively watching them.",
+                examples: ["Database encryption", "File system permissions", "Physical security of servers", "Backup storage security"]
+            },
+            transmission: {
+                title: "Transmission (Data in Transit)",
+                badge: "MSR STATE",
+                badgeColor: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+                desc: "Information being sent from one location to another. Security ensures safety while data moves across networks.",
+                analogy: "Securely sending valuables to a bank or transferring them to another house. The transport vehicle must be armored and tracked.",
+                examples: ["TLS/SSL protocols", "VPNs for secure tunnels", "Digital signatures for integrity", "End-to-end encryption"]
+            },
+            processing: {
+                title: "Processing (Data in Use)",
+                badge: "MSR STATE",
+                badgeColor: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+                desc: "Information being actively used or manipulated. Security ensures nothing goes wrong during active operations.",
+                analogy: "When you are actively using your valuables - opening the safe, retrieving documents, or counting cash. Must ensure no one can see or alter during use.",
+                examples: ["Memory protection mechanisms", "Secure enclaves (TEE)", "Input validation", "Process isolation"]
+            }
+        };
+
+        // State
+        let currentCard = 0;
+        let knownCards = new Set();
+        let shuffledIndices = [...Array(flashcardsData.length).keys()];
+        let quizIndex = 0;
+        let quizScore = 0;
+        let quizAnswers = [];
+        let studyStartTime = Date.now();
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCard();
+            renderCardIndicators();
+            updateStats();
+            setInterval(updateStudyTime, 60000); // Update every minute
+        });
+
+        // Tab Switching
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            
+            // Update nav buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if(btn.dataset.tab === tabName) {
+                    btn.classList.remove('text-slate-400');
+                    btn.classList.add('text-blue-400');
+                } else {
+                    btn.classList.add('text-slate-400');
+                    btn.classList.remove('text-blue-400');
+                }
+            });
+
+            // Close mobile menu if open
+            document.getElementById('mobileMenu').classList.add('hidden');
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('mobileMenu').classList.toggle('hidden');
+        }
+
+        // Flashcard Functions
+        function renderCard() {
+            const card = flashcardsData[shuffledIndices[currentCard]];
+            const cardEl = document.getElementById('flashcard');
+            
+            // Update content
+            document.getElementById('card-category').textContent = card.category;
+            document.getElementById('card-category').className = `absolute top-6 left-6 px-3 py-1 rounded-full text-xs font-bold border bg-${card.color}-500/20 text-${card.color}-400 border-${card.color}-500/30`;
+            document.getElementById('card-question').textContent = card.question;
+            document.getElementById('card-answer').textContent = card.answer;
+            document.getElementById('card-details').innerHTML = `<strong>Details:</strong><br>${card.details}`;
+            
+            // Update counter
+            document.getElementById('card-counter').textContent = `${currentCard + 1} / ${flashcardsData.length}`;
+            
+            // Reset flip
+            cardEl.classList.remove('flipped');
+            
+            // Update known button state
+            const btn = document.getElementById('btn-known');
+            if(knownCards.has(shuffledIndices[currentCard])) {
+                btn.textContent = 'Known ✓';
+                btn.classList.add('bg-emerald-600', 'text-white');
+                btn.classList.remove('bg-emerald-600/20', 'text-emerald-400');
+            } else {
+                btn.textContent = 'Mark as Known';
+                btn.classList.remove('bg-emerald-600', 'text-white');
+                btn.classList.add('bg-emerald-600/20', 'text-emerald-400');
+            }
+
+            updateCardIndicators();
+        }
+
+        function flipCard() {
+            document.getElementById('flashcard').classList.toggle('flipped');
+        }
+
+        function nextCard() {
+            currentCard = (currentCard + 1) % flashcardsData.length;
+            renderCard();
+        }
+
+        function prevCard() {
+            currentCard = (currentCard - 1 + flashcardsData.length) % flashcardsData.length;
+            renderCard();
+        }
+
+        function markKnown() {
+            const originalIndex = shuffledIndices[currentCard];
+            if(knownCards.has(originalIndex)) {
+                knownCards.delete(originalIndex);
+            } else {
+                knownCards.add(originalIndex);
+            }
+            renderCard();
+            updateStats();
+        }
+
+        function shuffleCards() {
+            shuffledIndices = shuffledIndices.sort(() => Math.random() - 0.5);
+            currentCard = 0;
+            renderCard();
+        }
+
+        function renderCardIndicators() {
+            const container = document.getElementById('card-indicators');
+            container.innerHTML = '';
+            for(let i = 0; i < flashcardsData.length; i++) {
+                const dot = document.createElement('button');
+                dot.className = `w-2 h-2 rounded-full transition-all ${i === currentCard ? 'bg-blue-500 w-6' : 'bg-slate-600 hover:bg-slate-500'}`;
+                dot.onclick = () => {
+                    currentCard = i;
+                    renderCard();
+                };
+                container.appendChild(dot);
+            }
+        }
+
+        function updateCardIndicators() {
+            const dots = document.getElementById('card-indicators').children;
+            for(let i = 0; i < dots.length; i++) {
+                if(i === currentCard) {
+                    dots[i].className = 'w-2 h-2 rounded-full transition-all bg-blue-500 w-6';
+                } else if(knownCards.has(shuffledIndices[i])) {
+                    dots[i].className = 'w-2 h-2 rounded-full transition-all bg-emerald-500';
+                } else {
+                    dots[i].className = 'w-2 h-2 rounded-full transition-all bg-slate-600 hover:bg-slate-500';
+                }
+            }
+        }
+
+        // Visual Learning Functions
+        function showConcept(concept) {
+            const data = conceptDetails[concept];
+            if(!data) return;
+
+            document.getElementById('concept-placeholder').classList.add('hidden');
+            document.getElementById('concept-details').classList.remove('hidden');
+            
+            const badge = document.getElementById('concept-badge');
+            badge.className = `px-3 py-1 rounded-full text-xs font-bold border ${data.badgeColor}`;
+            badge.textContent = data.badge;
+            
+            document.getElementById('concept-title').textContent = data.title;
+            document.getElementById('concept-desc').textContent = data.desc;
+            document.getElementById('concept-analogy').textContent = data.analogy;
+            
+            const examplesList = document.getElementById('concept-examples');
+            examplesList.innerHTML = '';
+            data.examples.forEach(ex => {
+                const li = document.createElement('li');
+                li.textContent = `• ${ex}`;
+                examplesList.appendChild(li);
+            });
+        }
+
+        function highlight(part) {
+            // Visual feedback handled by CSS hover, but could add sound or additional effects here
+        }
+
+        function unhighlight() {
+            // Cleanup if needed
+        }
+
+        // Quiz Functions
+        function renderQuizQuestion() {
+            const q = quizData[quizIndex];
+            document.getElementById('quiz-question').textContent = q.question;
+            document.getElementById('quiz-question-num').textContent = `${quizIndex + 1}/${quizData.length}`;
+            
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = '';
+            
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-option w-full text-left p-4 rounded-xl border border-slate-600 bg-slate-800/50 text-slate-200 hover:border-blue-500/50 flex items-center gap-3';
+                btn.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-sm font-bold border border-slate-600">${String.fromCharCode(65 + idx)}</div>
+                    <span>${opt}</span>
+                `;
+                btn.onclick = () => selectAnswer(idx);
+                optionsContainer.appendChild(btn);
+            });
+
+            // Update progress circle
+            const progress = (quizIndex / quizData.length) * 175.9;
+            document.getElementById('quiz-progress').style.strokeDashoffset = 175.9 - progress;
+            
+            // Hide feedback and next button
+            document.getElementById('quiz-feedback').classList.add('hidden');
+            document.getElementById('quiz-next-btn').classList.add('hidden');
+        }
+
+        function selectAnswer(selected) {
+            const q = quizData[quizIndex];
+            const options = document.querySelectorAll('.quiz-option');
+            
+            // Disable all options
+            options.forEach(opt => {
+                opt.classList.add('disabled');
+                opt.onclick = null;
+            });
+            
+            // Mark correct/incorrect
+            if(selected === q.correct) {
+                options[selected].classList.add('correct');
+                quizScore++;
+                showFeedback(true, "Correct!", q.explanation);
+            } else {
+                options[selected].classList.add('incorrect');
+                options[q.correct].classList.add('correct');
+                showFeedback(false, "Incorrect", q.explanation);
+            }
+            
+            document.getElementById('quiz-score').textContent = `${quizScore}/${quizIndex + 1}`;
+            document.getElementById('quiz-next-btn').classList.remove('hidden');
+            
+            if(quizIndex === quizData.length - 1) {
+                document.getElementById('quiz-next-btn').textContent = 'See Results →';
+                document.getElementById('quiz-next-btn').onclick = showResults;
+            }
+        }
+
+        function showFeedback(isCorrect, title, text) {
+            const fb = document.getElementById('quiz-feedback');
+            const icon = document.getElementById('feedback-icon');
+            const titleEl = document.getElementById('feedback-title');
+            const textEl = document.getElementById('feedback-text');
+            
+            fb.classList.remove('hidden');
+            if(isCorrect) {
+                fb.className = 'mt-6 p-4 rounded-lg border bg-emerald-500/10 border-emerald-500/50';
+                icon.textContent = '✓';
+                icon.className = 'text-2xl text-emerald-400';
+                titleEl.className = 'font-bold text-emerald-400 mb-1';
+            } else {
+                fb.className = 'mt-6 p-4 rounded-lg border bg-red-500/10 border-red-500/50';
+                icon.textContent = '✕';
+                icon.className = 'text-2xl text-red-400';
+                titleEl.className = 'font-bold text-red-400 mb-1';
+            }
+            titleEl.textContent = title;
+            textEl.textContent = text;
+        }
+
+        function nextQuestion() {
+            quizIndex++;
+            if(quizIndex < quizData.length) {
+                renderQuizQuestion();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quiz-container').classList.add('hidden');
+            document.getElementById('quiz-results').classList.remove('hidden');
+            
+            const percent = Math.round((quizScore / quizData.length) * 100);
+            document.getElementById('result-correct').textContent = quizScore;
+            document.getElementById('result-total').textContent = quizData.length;
+            document.getElementById('result-percent').textContent = `${percent}%`;
+            
+            let message = '';
+            if(percent >= 90) message = 'Outstanding! You have mastered these concepts. 🌟';
+            else if(percent >= 70) message = 'Great job! You understand the material well. 👍';
+            else if(percent >= 50) message = 'Good effort! Review the flashcards to improve. 📚';
+            else message = 'Keep studying! Use the flashcards and visual aids to reinforce learning. 💪';
+            
+            document.getElementById('result-message').textContent = message;
+            updateStats();
+        }
+
+        function resetQuiz() {
+            quizIndex = 0;
+            quizScore = 0;
+            document.getElementById('quiz-container').classList.remove('hidden');
+            document.getElementById('quiz-results').classList.add('hidden');
+            document.getElementById('quiz-score').textContent = '0/0';
+            document.getElementById('quiz-next-btn').textContent = 'Next Question →';
+            document.getElementById('quiz-next-btn').onclick = nextQuestion;
+            renderQuizQuestion();
+        }
+
+        // Stats and Progress
+        function updateStats() {
+            // Flashcards progress
+            document.getElementById('stat-flashcards').textContent = `${knownCards.size}/${flashcardsData.length}`;
+            
+            // Quiz score if taken
+            if(quizIndex > 0 || document.getElementById('quiz-results').classList.contains('hidden') === false) {
+                const percent = quizIndex > 0 ? Math.round((quizScore / quizIndex) * 100) : 0;
+                document.getElementById('stat-quiz').textContent = quizIndex > 0 ? `${percent}%` : '0%';
+            }
+            
+            // Calculate category progress
+            const categories = {
+                confidentiality: [0, 3, 8], // indices of confidentiality cards
+                integrity: [1, 9],
+                availability: [2, 10]
+            };
+            
+            Object.keys(categories).forEach(cat => {
+                const catCards = categories[cat];
+                const known = catCards.filter(i => knownCards.has(i)).length;
+                const pct = (known / catCards.length) * 100;
+                document.getElementById(`prog-${cat === 'confidentiality' ? 'conf' : cat === 'integrity' ? 'integ' : 'avail'}`).style.width = `${pct}%`;
+            });
+            
+            // Mastery level
+            const totalKnown = knownCards.size;
+            let level = 'Beginner';
+            if(totalKnown >= 10) level = 'Expert';
+            else if(totalKnown >= 6) level = 'Intermediate';
+            else if(totalKnown >= 3) level = 'Learner';
+            document.getElementById('stat-mastery').textContent = level;
+        }
+
+        function updateStudyTime() {
+            const minutes = Math.floor((Date.now() - studyStartTime) / 60000);
+            document.getElementById('stat-time').textContent = `${minutes}m`;
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if(document.getElementById('flashcards').classList.contains('active')) {
+                if(e.code === 'Space') {
+                    e.preventDefault();
+                    flipCard();
+                } else if(e.code === 'ArrowRight') {
+                    nextCard();
+                } else if(e.code === 'ArrowLeft') {
+                    prevCard();
+                } else if(e.code === 'KeyK') {
+                    markKnown();
+                }
+            }
+        });
+
+        // Initialize quiz
+        renderQuizQuestion();
+    </script>
+</body>
+</html>
