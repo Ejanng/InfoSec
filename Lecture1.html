@@ -300,28 +300,30 @@
 
                 <!-- Flashcard Container -->
                 <div class="perspective-1000 h-96 mb-8 cursor-pointer" onclick="flipCard()">
-                    <div id="flashcard" class="flip-card flip-card-inner glass rounded-2xl shadow-2xl">
-                        <!-- Front -->
-                        <div class="flip-card-front bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700">
-                            <div id="card-category" class="absolute top-6 left-6 px-3 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                                CIA TRIAD
+                    <div id="flashcard-container" class="flip-card">
+                        <div id="flashcard" class="flip-card flip-card-inner glass rounded-2xl shadow-2xl">
+                            <!-- Front -->
+                            <div class="flip-card-front bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700">
+                                <div id="card-category" class="absolute top-6 left-6 px-3 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                                    CIA TRIAD
+                                </div>
+                                <div id="card-question" class="text-2xl md:text-3xl font-display font-bold text-white text-center px-8">
+                                    What is the primary goal of Confidentiality?
+                                </div>
+                                <div class="absolute bottom-6 text-slate-500 text-sm animate-pulse">
+                                    Click to flip
+                                </div>
                             </div>
-                            <div id="card-question" class="text-2xl md:text-3xl font-display font-bold text-white text-center px-8">
-                                What is the primary goal of Confidentiality?
-                            </div>
-                            <div class="absolute bottom-6 text-slate-500 text-sm animate-pulse">
-                                Click to flip
-                            </div>
-                        </div>
-                        
-                        <!-- Back -->
-                        <div class="flip-card-back bg-gradient-to-br from-slate-700 to-slate-800 border border-slate-600">
-                            <div id="card-answer" class="text-xl text-slate-200 text-center px-8 leading-relaxed">
-                                Ensure that sensitive information is accessible only to authorized individuals
-                            </div>
-                            <div id="card-details" class="mt-6 text-sm text-slate-400 max-w-lg">
-                                <strong>Key threats:</strong> Unauthorized access, data leaks, eavesdropping<br>
-                                <strong>Countermeasures:</strong> Encryption, Access Controls, Data Masking
+                            
+                            <!-- Back -->
+                            <div class="flip-card-back bg-gradient-to-br from-slate-700 to-slate-800 border border-slate-600">
+                                <div id="card-answer" class="text-xl text-slate-200 text-center px-8 leading-relaxed">
+                                    Ensure that sensitive information is accessible only to authorized individuals
+                                </div>
+                                <div id="card-details" class="mt-6 text-sm text-slate-400 max-w-lg">
+                                    <strong>Key threats:</strong> Unauthorized access, data leaks, eavesdropping<br>
+                                    <strong>Countermeasures:</strong> Encryption, Access Controls, Data Masking
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -860,7 +862,7 @@
         }
 
         function flipCard() {
-            document.getElementById('flashcard').classList.toggle('flipped');
+            document.getElementById('flashcard-container').classList.toggle('flipped');
         }
 
         function nextCard() {
