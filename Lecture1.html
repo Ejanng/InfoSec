@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cybersecurity CIA & MSR Model - Interactive Reviewer</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap');
-
+        /* System fonts - no external dependencies */
         :root {
             --primary: #6366f1;
             --primary-dark: #4f46e5;
@@ -28,11 +27,12 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: var(--bg-dark);
             color: var(--text-primary);
             min-height: 100vh;
             overflow-x: hidden;
+            line-height: 1.6;
         }
 
         /* Animated Background */
@@ -151,6 +151,7 @@
             transition: all 0.3s ease;
             font-weight: 600;
             font-size: 0.9rem;
+            font-family: inherit;
         }
 
         .tab-btn:hover {
@@ -218,13 +219,14 @@
             align-items: center;
             justify-content: center;
             font-size: 1.5rem;
+            flex-shrink: 0;
         }
 
-        .icon.confidentiality { background: rgba(99, 102, 241, 0.2); color: var(--primary); }
-        .icon.integrity { background: rgba(16, 185, 129, 0.2); color: var(--success); }
-        .icon.availability { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
-        .icon.authentication { background: rgba(236, 72, 153, 0.2); color: var(--secondary); }
-        .icon.non-repudiation { background: rgba(6, 182, 212, 0.2); color: var(--accent); }
+        .icon.confidentiality { background: rgba(99, 102, 241, 0.2); }
+        .icon.integrity { background: rgba(16, 185, 129, 0.2); }
+        .icon.availability { background: rgba(245, 158, 11, 0.2); }
+        .icon.authentication { background: rgba(236, 72, 153, 0.2); }
+        .icon.non-repudiation { background: rgba(6, 182, 212, 0.2); }
 
         .card h2 {
             font-size: 1.5rem;
@@ -250,6 +252,8 @@
         @media (max-width: 768px) {
             .content-grid { grid-template-columns: 1fr; }
             h1 { font-size: 1.8rem; }
+            .nav-tabs { gap: 0.5rem; }
+            .tab-btn { padding: 0.5rem 1rem; font-size: 0.8rem; }
         }
 
         .list-section h3 {
@@ -372,7 +376,7 @@
 
         .option-letter {
             font-weight: 700;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: 'Courier New', monospace;
             width: 30px;
             height: 30px;
             display: flex;
@@ -381,6 +385,7 @@
             background: rgba(255,255,255,0.2);
             border-radius: 8px;
             font-size: 0.9rem;
+            flex-shrink: 0;
         }
 
         .quiz-controls {
@@ -397,6 +402,7 @@
             cursor: pointer;
             transition: all 0.3s ease;
             font-size: 1rem;
+            font-family: inherit;
         }
 
         .btn-primary {
@@ -404,7 +410,7 @@
             color: white;
         }
 
-        .btn-primary:hover {
+        .btn-primary:hover:not(:disabled) {
             background: var(--primary-dark);
             transform: translateY(-2px);
             box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
@@ -415,7 +421,7 @@
             color: var(--text-primary);
         }
 
-        .btn-secondary:hover {
+        .btn-secondary:hover:not(:disabled) {
             background: rgba(255,255,255,0.2);
         }
 
@@ -547,6 +553,10 @@
             margin: 2rem auto;
         }
 
+        @media (max-width: 600px) {
+            .matching-grid { grid-template-columns: 1fr; }
+        }
+
         .matching-item {
             padding: 1.5rem;
             background: rgba(255,255,255,0.05);
@@ -560,6 +570,7 @@
             align-items: center;
             justify-content: center;
             font-weight: 600;
+            user-select: none;
         }
 
         .matching-item:hover {
@@ -687,12 +698,34 @@
             display: none;
         }
 
+        /* Confetti Animation */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            top: -10px;
+            animation: confetti-fall 3s linear forwards;
+            z-index: 9999;
+        }
+
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
         /* Responsive */
         @media (max-width: 640px) {
             .container { padding: 0 1rem 2rem; }
             .card { padding: 1.5rem; }
             .quiz-container { padding: 1.5rem; }
             .flashcard { height: 350px; }
+            .flashcard-title { font-size: 1.4rem; }
+            .results-container { padding: 1.5rem; }
+            .score-circle { width: 150px; height: 150px; }
+            .score-circle::before { width: 120px; height: 120px; }
+            .score-text { font-size: 2rem; }
         }
     </style>
 <base target="_blank">
@@ -702,7 +735,7 @@
     <div class="particles" id="particles"></div>
 
     <header>
-        <h1>🔒 Cybersecurity Fundamentals</h1>
+        <h1>Cybersecurity Fundamentals</h1>
         <p class="subtitle">CIA Triad & MSR Model Interactive Reviewer</p>
     </header>
 
@@ -714,11 +747,11 @@
     </div>
 
     <nav class="nav-tabs">
-        <button class="tab-btn active" onclick="showSection('learn')">📚 Learn</button>
-        <button class="tab-btn" onclick="showSection('flashcards')">🎴 Flashcards</button>
-        <button class="tab-btn" onclick="showSection('quiz')">📝 Quiz</button>
-        <button class="tab-btn" onclick="showSection('matching')">🎮 Matching</button>
-        <button class="tab-btn" onclick="showSection('analogy')">🏠 Analogy</button>
+        <button class="tab-btn active" onclick="showSection('learn')">Learn</button>
+        <button class="tab-btn" onclick="showSection('flashcards')">Flashcards</button>
+        <button class="tab-btn" onclick="showSection('quiz')">Quiz</button>
+        <button class="tab-btn" onclick="showSection('matching')">Matching</button>
+        <button class="tab-btn" onclick="showSection('analogy')">Analogy</button>
     </nav>
 
     <div class="container">
@@ -743,14 +776,14 @@
             <div class="card" data-topic="confidentiality">
                 <div class="card-header">
                     <div class="icon confidentiality">🔐</div>
-                    <h2>1. Confidentiality <span class="badge hidden" id="badge-confidentiality">✓ Complete</span></h2>
+                    <h2>1. Confidentiality <span class="badge hidden" id="badge-confidentiality">Complete</span></h2>
                 </div>
                 <div class="objective">
                     <strong>Objective:</strong> Ensure that sensitive information is accessible only to authorized entities.
                 </div>
                 <div class="content-grid">
                     <div class="list-section threats">
-                        <h3>⚠️ Common Threats</h3>
+                        <h3>Common Threats</h3>
                         <ul>
                             <li>Unauthorized access (hacking, phishing)</li>
                             <li>Data leaks or eavesdropping</li>
@@ -758,7 +791,7 @@
                         </ul>
                     </div>
                     <div class="list-section countermeasures">
-                        <h3>🛡️ Countermeasures</h3>
+                        <h3>Countermeasures</h3>
                         <ul>
                             <li><strong>Encryption:</strong> AES, TLS for data at rest/transit</li>
                             <li><strong>Access Controls:</strong> RBAC, Principle of Least Privilege</li>
@@ -772,15 +805,15 @@
             <!-- Integrity -->
             <div class="card" data-topic="integrity">
                 <div class="card-header">
-                    <div class="icon integrity">✅</div>
-                    <h2>2. Integrity <span class="badge hidden" id="badge-integrity">✓ Complete</span></h2>
+                    <div class="icon integrity">✓</div>
+                    <h2>2. Integrity <span class="badge hidden" id="badge-integrity">Complete</span></h2>
                 </div>
                 <div class="objective">
                     <strong>Objective:</strong> Ensure information remains accurate, complete, and unaltered.
                 </div>
                 <div class="content-grid">
                     <div class="list-section threats">
-                        <h3>⚠️ Common Threats</h3>
+                        <h3>Common Threats</h3>
                         <ul>
                             <li>Data manipulation (malicious edits)</li>
                             <li>Transmission errors (corruption)</li>
@@ -788,7 +821,7 @@
                         </ul>
                     </div>
                     <div class="list-section countermeasures">
-                        <h3>🛡️ Countermeasures</h3>
+                        <h3>Countermeasures</h3>
                         <ul>
                             <li><strong>Cryptographic Hashing:</strong> SHA-256 verification</li>
                             <li><strong>Digital Signatures:</strong> Authenticate source</li>
@@ -803,14 +836,14 @@
             <div class="card" data-topic="availability">
                 <div class="card-header">
                     <div class="icon availability">⚡</div>
-                    <h2>3. Availability <span class="badge hidden" id="badge-availability">✓ Complete</span></h2>
+                    <h2>3. Availability <span class="badge hidden" id="badge-availability">Complete</span></h2>
                 </div>
                 <div class="objective">
                     <strong>Objective:</strong> Ensure systems and data are accessible when needed.
                 </div>
                 <div class="content-grid">
                     <div class="list-section threats">
-                        <h3>⚠️ Common Threats</h3>
+                        <h3>Common Threats</h3>
                         <ul>
                             <li>DoS/DDoS attacks</li>
                             <li>System failures (hardware issues)</li>
@@ -818,7 +851,7 @@
                         </ul>
                     </div>
                     <div class="list-section countermeasures">
-                        <h3>🛡️ Countermeasures</h3>
+                        <h3>Countermeasures</h3>
                         <ul>
                             <li><strong>Redundancy:</strong> Backup servers, load balancers</li>
                             <li><strong>DDoS Mitigation:</strong> Traffic filtering</li>
@@ -832,15 +865,15 @@
             <!-- Authentication -->
             <div class="card" data-topic="authentication">
                 <div class="card-header">
-                    <div class="icon authentication">🆔</div>
-                    <h2>4. Authentication <span class="badge hidden" id="badge-authentication">✓ Complete</span></h2>
+                    <div class="icon authentication">ID</div>
+                    <h2>4. Authentication <span class="badge hidden" id="badge-authentication">Complete</span></h2>
                 </div>
                 <div class="objective">
                     <strong>Objective:</strong> Ensure users and systems are who they claim to be.
                 </div>
                 <div class="content-grid">
                     <div class="list-section threats">
-                        <h3>⚠️ Common Threats</h3>
+                        <h3>Common Threats</h3>
                         <ul>
                             <li>Impersonation attacks</li>
                             <li>Stolen credentials</li>
@@ -848,7 +881,7 @@
                         </ul>
                     </div>
                     <div class="list-section countermeasures">
-                        <h3>🛡️ Countermeasures</h3>
+                        <h3>Countermeasures</h3>
                         <ul>
                             <li><strong>Multi-Factor Authentication (MFA):</strong> Password + biometrics</li>
                             <li><strong>Strong Password Policies:</strong> Complex & rotation</li>
@@ -862,15 +895,15 @@
             <!-- Non-repudiation -->
             <div class="card" data-topic="non-repudiation">
                 <div class="card-header">
-                    <div class="icon non-repudiation">📝</div>
-                    <h2>5. Non-repudiation <span class="badge hidden" id="badge-non-repudiation">✓ Complete</span></h2>
+                    <div class="icon non-repudiation">✎</div>
+                    <h2>5. Non-repudiation <span class="badge hidden" id="badge-non-repudiation">Complete</span></h2>
                 </div>
                 <div class="objective">
                     <strong>Objective:</strong> Ensure individuals cannot deny actions or transactions they performed.
                 </div>
                 <div class="content-grid">
                     <div class="list-section threats">
-                        <h3>⚠️ Common Threats</h3>
+                        <h3>Common Threats</h3>
                         <ul>
                             <li>Users denying sent data</li>
                             <li>Fraudulent denial of transactions</li>
@@ -878,7 +911,7 @@
                         </ul>
                     </div>
                     <div class="list-section countermeasures">
-                        <h3>🛡️ Countermeasures</h3>
+                        <h3>Countermeasures</h3>
                         <ul>
                             <li><strong>Digital Signatures:</strong> Bind identity to message</li>
                             <li><strong>Public Key Infrastructure (PKI):</strong> Certificates & keys</li>
@@ -892,7 +925,7 @@
             <!-- Integrated Countermeasures -->
             <div class="card" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(236, 72, 153, 0.1));">
                 <div class="card-header">
-                    <div class="icon" style="background: rgba(255,255,255,0.1); color: white;">🛡️</div>
+                    <div class="icon" style="background: rgba(255,255,255,0.1); color: white;">🛡</div>
                     <h2>Integrated Countermeasures</h2>
                 </div>
                 <p style="color: var(--text-secondary); margin-bottom: 1rem;">
@@ -900,7 +933,7 @@
                 </p>
                 <div class="content-grid">
                     <div class="list-section countermeasures">
-                        <h3>🛡️ Examples</h3>
+                        <h3>Examples</h3>
                         <ul>
                             <li><strong>IDPS:</strong> Monitor network traffic for suspicious activities</li>
                             <li><strong>Zero Trust Architecture:</strong> Assume no trust by default</li>
@@ -914,14 +947,14 @@
             <div class="card" data-topic="msr">
                 <div class="card-header">
                     <div class="icon" style="background: rgba(6, 182, 212, 0.2); color: var(--accent);">📊</div>
-                    <h2>MSR Model <span class="badge hidden" id="badge-msr">✓ Complete</span></h2>
+                    <h2>MSR Model <span class="badge hidden" id="badge-msr">Complete</span></h2>
                 </div>
                 <div class="objective">
                     <strong>Objective:</strong> Comprehensive security framework beyond CIA Triad.
                 </div>
                 <div class="content-grid">
                     <div>
-                        <h3 style="color: var(--accent); margin-bottom: 1rem;">🔹 Goals (CIA)</h3>
+                        <h3 style="color: var(--accent); margin-bottom: 1rem;">Goals (CIA)</h3>
                         <ul style="list-style: none; color: var(--text-secondary);">
                             <li>• Confidentiality</li>
                             <li>• Integrity</li>
@@ -929,7 +962,7 @@
                         </ul>
                     </div>
                     <div>
-                        <h3 style="color: var(--accent); margin-bottom: 1rem;">🔹 Information States</h3>
+                        <h3 style="color: var(--accent); margin-bottom: 1rem;">Information States</h3>
                         <ul style="list-style: none; color: var(--text-secondary);">
                             <li>• <strong>Storage:</strong> At rest (locked safe)</li>
                             <li>• <strong>Transmission:</strong> In transit (secure transfer)</li>
@@ -937,7 +970,7 @@
                         </ul>
                     </div>
                     <div>
-                        <h3 style="color: var(--accent); margin-bottom: 1rem;">🔹 Safeguards</h3>
+                        <h3 style="color: var(--accent); margin-bottom: 1rem;">Safeguards</h3>
                         <ul style="list-style: none; color: var(--text-secondary);">
                             <li>• <strong>Policies:</strong> Rules (lock door at night)</li>
                             <li>• <strong>Procedures:</strong> Steps (check alarm)</li>
@@ -952,7 +985,7 @@
         <!-- Flashcards Section -->
         <div id="flashcards" class="section">
             <div class="quiz-header">
-                <h2>🎴 Study Flashcards</h2>
+                <h2>Study Flashcards</h2>
                 <p class="question-counter">Click card to flip • Test your memory</p>
             </div>
 
@@ -973,8 +1006,8 @@
             </div>
 
             <div class="flashcard-nav">
-                <button class="btn btn-secondary" onclick="prevCard()">← Previous</button>
-                <button class="btn btn-primary" onclick="nextCard()">Next →</button>
+                <button class="btn btn-secondary" onclick="prevCard()">Previous</button>
+                <button class="btn btn-primary" onclick="nextCard()">Next</button>
             </div>
 
             <div style="text-align: center; margin-top: 1rem; color: var(--text-secondary);">
@@ -986,16 +1019,14 @@
         <div id="quiz" class="section">
             <div class="quiz-container">
                 <div class="quiz-header">
-                    <h2>📝 Knowledge Check</h2>
+                    <h2>Knowledge Check</h2>
                     <p class="question-counter">Question <span id="currentQ">1</span> of <span id="totalQ">8</span></p>
                 </div>
 
                 <div id="quizContent">
                     <div class="question-card">
-                        <div class="question-text" id="questionText">Which encryption protocol is recommended for protecting data in transit?</div>
-                        <div class="options" id="options">
-                            <!-- Options injected by JS -->
-                        </div>
+                        <div class="question-text" id="questionText">Loading...</div>
+                        <div class="options" id="options"></div>
                     </div>
 
                     <div class="quiz-controls">
@@ -1006,8 +1037,8 @@
 
                 <div id="quizResults" style="display: none;">
                     <div class="results-container">
-                        <h2>Quiz Complete! 🎉</h2>
-                        <div class="score-circle" id="scoreCircle">
+                        <h2>Quiz Complete!</h2>
+                        <div class="score-circle" id="scoreCircle" style="--score: 0;">
                             <span class="score-text" id="scoreText">0%</span>
                         </div>
                         <p class="feedback" id="feedback">Complete the quiz to see your score</p>
@@ -1020,7 +1051,7 @@
         <!-- Matching Game -->
         <div id="matching" class="section">
             <div class="quiz-header">
-                <h2>🎮 Matching Game</h2>
+                <h2>Matching Game</h2>
                 <p class="question-counter">Match the concept with its description</p>
             </div>
 
@@ -1029,9 +1060,7 @@
                 <span id="matchScore" style="color: var(--success); font-weight: 700; font-size: 1.2rem;">0/6</span>
             </div>
 
-            <div class="matching-grid" id="matchingGrid">
-                <!-- Items injected by JS -->
-            </div>
+            <div class="matching-grid" id="matchingGrid"></div>
 
             <div style="text-align: center; margin-top: 2rem;">
                 <button class="btn btn-primary" onclick="initMatching()">New Game</button>
@@ -1041,7 +1070,7 @@
         <!-- Analogy Section -->
         <div id="analogy" class="section">
             <div class="quiz-header">
-                <h2>🏠 The House Analogy</h2>
+                <h2>The House Analogy</h2>
                 <p class="question-counter">Understanding security through real-world comparison</p>
             </div>
 
@@ -1058,7 +1087,7 @@
                 </div>
 
                 <div class="analogy-card">
-                    <div class="analogy-visual">🏗️</div>
+                    <div class="analogy-visual">🏗</div>
                     <h3 class="analogy-title">Integrity</h3>
                     <p class="analogy-description">
                         Like ensuring the <strong>house structure</strong> (walls, roof, plumbing) is well-maintained and nothing inside (furniture, documents) is tampered with or damaged.
@@ -1128,6 +1157,7 @@
             event.target.classList.add('active');
 
             if (sectionId === 'matching') initMatching();
+            if (sectionId === 'quiz' && currentQuestion === 0) loadQuestion();
         }
 
         // Progress Tracking
@@ -1147,7 +1177,8 @@
                     const topic = entry.target.dataset.topic;
                     if (topic) {
                         viewedTopics.add(topic);
-                        document.getElementById('badge-' + topic)?.classList.remove('hidden');
+                        const badge = document.getElementById('badge-' + topic);
+                        if (badge) badge.classList.remove('hidden');
                         updateProgress();
                     }
                 }
@@ -1161,14 +1192,14 @@
         // Flashcards Data
         const flashcards = [
             { icon: '🔐', title: 'Confidentiality', front: 'What is the primary objective of Confidentiality?', back: 'Ensure sensitive information is accessible only to authorized entities. Uses encryption (AES, TLS), access controls (RBAC), and network segmentation.' },
-            { icon: '✅', title: 'Integrity', front: 'How do we ensure data Integrity?', back: 'Use cryptographic hashing (SHA-256), digital signatures, audit trails, and redundant storage (RAID) to prevent unauthorized modifications.' },
+            { icon: '✓', title: 'Integrity', front: 'How do we ensure data Integrity?', back: 'Use cryptographic hashing (SHA-256), digital signatures, audit trails, and redundant storage (RAID) to prevent unauthorized modifications.' },
             { icon: '⚡', title: 'Availability', front: 'What threatens Availability and how do we protect it?', back: 'Threats: DoS/DDoS attacks, hardware failures. Protection: Redundancy, load balancers, DDoS mitigation, regular backups, disaster recovery plans.' },
-            { icon: '🆔', title: 'Authentication', front: 'What are effective Authentication methods?', back: 'Multi-Factor Authentication (MFA), strong password policies, biometrics (fingerprints, facial recognition), and secure session management.' },
-            { icon: '📝', title: 'Non-repudiation', front: 'How do we achieve Non-repudiation?', back: 'Digital signatures bind identity to messages, PKI certificates ensure authenticity, tamper-proof transaction logs, and trusted time stamping.' },
-            { icon: '🛡️', title: 'Encryption', front: 'What is the difference between data at rest and in transit?', back: 'Data at rest: stored data protected by AES. Data in transit: moving data protected by TLS/SSL during transmission.' },
+            { icon: 'ID', title: 'Authentication', front: 'What are effective Authentication methods?', back: 'Multi-Factor Authentication (MFA), strong password policies, biometrics (fingerprints, facial recognition), and secure session management.' },
+            { icon: '✎', title: 'Non-repudiation', front: 'How do we achieve Non-repudiation?', back: 'Digital signatures bind identity to messages, PKI certificates ensure authenticity, tamper-proof transaction logs, and trusted time stamping.' },
+            { icon: '🛡', title: 'Encryption', front: 'What is the difference between data at rest and in transit?', back: 'Data at rest: stored data protected by AES. Data in transit: moving data protected by TLS/SSL during transmission.' },
             { icon: '🔑', title: 'RBAC', front: 'What is Role-Based Access Control (RBAC)?', back: 'Access control method that restricts system access based on user roles within an organization. Implements Principle of Least Privilege (POLP).' },
-            { icon: '🏛️', title: 'PKI', front: 'What is Public Key Infrastructure (PKI)?', back: 'System of certificates, keys, and authorities that verify and authenticate the validity of parties involved in electronic transactions.' },
-            { icon: '⚠️', title: 'DDoS', front: 'What is a DDoS attack?', back: 'Distributed Denial of Service attack where multiple compromised systems flood a target with traffic, making it unavailable to legitimate users.' },
+            { icon: '🏛', title: 'PKI', front: 'What is Public Key Infrastructure (PKI)?', back: 'System of certificates, keys, and authorities that verify and authenticate the validity of parties involved in electronic transactions.' },
+            { icon: '⚠', title: 'DDoS', front: 'What is a DDoS attack?', back: 'Distributed Denial of Service attack where multiple compromised systems flood a target with traffic, making it unavailable to legitimate users.' },
             { icon: '📊', title: 'MSR Model', front: 'What are the three components of the MSR Model?', back: 'Goals (CIA Triad), Information States (Storage, Transmission, Processing), and Safeguards (Policies, Procedures, Practices, Technologies).' }
         ];
 
@@ -1264,12 +1295,12 @@
             document.getElementById('totalQ').textContent = quizQuestions.length;
             document.getElementById('questionText').textContent = q.question;
 
-            const optionsHtml = q.options.map((opt, idx) => `
-                <div class="option" onclick="selectOption(${idx})" data-idx="${idx}">
-                    <span class="option-letter">${String.fromCharCode(65 + idx)}</span>
-                    <span>${opt}</span>
-                </div>
-            `).join('');
+            const optionsHtml = q.options.map((opt, idx) => 
+                '<div class="option" onclick="selectOption(' + idx + ')" data-idx="' + idx + '">' +
+                '<span class="option-letter">' + String.fromCharCode(65 + idx) + '</span>' +
+                '<span>' + opt + '</span>' +
+                '</div>'
+            ).join('');
 
             document.getElementById('options').innerHTML = optionsHtml;
             document.getElementById('nextBtn').disabled = true;
@@ -1325,12 +1356,28 @@
             document.getElementById('scoreText').textContent = percentage + '%';
 
             let feedback = '';
-            if (percentage >= 90) feedback = 'Outstanding! You're a security expert! 🏆';
-            else if (percentage >= 70) feedback = 'Great job! You understand the concepts well! 👍';
-            else if (percentage >= 50) feedback = 'Good effort! Review the material and try again. 📚';
-            else feedback = 'Keep studying! Review the lecture content and come back. 💪';
+            if (percentage >= 90) feedback = 'Outstanding! You are a security expert!';
+            else if (percentage >= 70) feedback = 'Great job! You understand the concepts well!';
+            else if (percentage >= 50) feedback = 'Good effort! Review the material and try again.';
+            else feedback = 'Keep studying! Review the lecture content and come back.';
 
             document.getElementById('feedback').textContent = feedback;
+
+            // Confetti effect for high scores
+            if (percentage >= 70) createConfetti();
+        }
+
+        function createConfetti() {
+            const colors = ['#6366f1', '#ec4899', '#06b6d4', '#10b981', '#f59e0b'];
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDelay = Math.random() * 2 + 's';
+                document.body.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 3000);
+            }
         }
 
         function restartQuiz() {
@@ -1339,10 +1386,9 @@
             userAnswers = [];
             document.getElementById('quizContent').style.display = 'block';
             document.getElementById('quizResults').style.display = 'none';
+            document.getElementById('prevBtn').disabled = true;
             loadQuestion();
         }
-
-        loadQuestion();
 
         // Matching Game
         const matchingPairs = [
@@ -1380,7 +1426,7 @@
                 div.dataset.matchId = item.matchId;
                 div.dataset.type = item.type;
                 div.dataset.index = idx;
-                div.onclick = () => selectMatch(div);
+                div.onclick = function() { selectMatch(this); };
                 grid.appendChild(div);
             });
         }
@@ -1405,7 +1451,8 @@
         }
 
         function checkMatch() {
-            const [first, second] = selectedItems;
+            const first = selectedItems[0];
+            const second = selectedItems[1];
             const match = first.dataset.matchId === second.dataset.matchId && 
                          first.dataset.type !== second.dataset.type;
 
@@ -1419,7 +1466,7 @@
                     document.getElementById('matchScore').textContent = matchesFound + '/6';
 
                     if (matchesFound === 6) {
-                        setTimeout(() => alert('🎉 Congratulations! You matched all pairs!'), 300);
+                        setTimeout(() => alert('Congratulations! You matched all pairs!'), 300);
                     }
                 } else {
                     first.classList.remove('selected');
@@ -1435,6 +1482,7 @@
             }, 300);
         }
 
+        // Initialize
         initMatching();
     </script>
 </body>
