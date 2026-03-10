@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecture 5: Planning for Security - Interactive Reviewer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        
+        /* Card Flip Animation */
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        
+        /* Progress Bar Animation */
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.8); }
+        }
+        .pulse-glow { animation: pulse-glow 2s infinite; }
+        
+        /* Typing Effect Cursor */
+        .typing-cursor::after {
+            content: '|';
+            animation: blink 1s infinite;
+        }
+        @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+        
+        /* Confetti Animation */
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        
+        /* Matrix Rain Effect for Header */
+        .matrix-bg {
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 1) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .matrix-rain {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen overflow-x-hidden">
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full bg-slate-900/90 backdrop-blur-md border-b border-slate-700 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold mono">L5</div>
+                    <span class="font-bold text-lg tracking-tight">InfoSec Planning</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <button onclick="showSection('dashboard')" class="nav-btn hover:text-blue-400 transition-colors text-sm font-medium">Dashboard</button>
+                    <button onclick="showSection('flashcards')" class="nav-btn hover:text-blue-400 transition-colors text-sm font-medium">Flashcards</button>
+                    <button onclick="showSection('quiz')" class="nav-btn hover:text-blue-400 transition-colors text-sm font-medium">Quiz</button>
+                    <button onclick="showSection('matching')" class="nav-btn hover:text-blue-400 transition-colors text-sm font-medium">Matching</button>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-xs text-slate-400 hidden sm:block">Progress: <span id="global-progress">0%</span></div>
+                    <div class="w-32 h-2 bg-slate-700 rounded-full overflow-hidden">
+                        <div id="global-progress-bar" class="h-full bg-blue-500 transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-16">
+        
+        <!-- Hero Section -->
+        <section id="hero" class="matrix-bg py-20 px-4 relative">
+            <canvas id="matrixCanvas" class="matrix-rain"></canvas>
+            <div class="max-w-4xl mx-auto text-center relative z-10">
+                <div class="inline-block px-4 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-sm mb-6 font-mono">
+                    Unit 2: Planning for Security
+                </div>
+                <h1 class="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">
+                    Master Security Planning
+                </h1>
+                <p class="text-xl text-slate-400 mb-8 max-w-2xl mx-auto">
+                    Interactive review of Information Security Blueprints, Policy Hierarchies, and Governance Frameworks
+                </p>
+                <div class="flex flex-wrap justify-center gap-4">
+                    <button onclick="showSection('flashcards')" class="px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition-all transform hover:scale-105 pulse-glow">
+                        Start Flashcards
+                    </button>
+                    <button onclick="showSection('quiz')" class="px-8 py-3 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg font-semibold transition-all">
+                        Take Quiz
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="max-w-7xl mx-auto px-4 py-12">
+            <h2 class="text-3xl font-bold mb-8 text-center">Learning Modules</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <!-- Module 1 -->
+                <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 hover:border-blue-500/50 transition-all cursor-pointer group" onclick="showSection('flashcards')">
+                    <div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Flashcards</h3>
+                    <p class="text-slate-400 text-sm mb-4">Master key terms: CIA Triad, Policy Hierarchy, Defense in Depth</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-slate-500" id="flashcard-progress-text">0/20 cards</span>
+                        <span class="text-blue-400 text-sm font-medium">Start →</span>
+                    </div>
+                </div>
+
+                <!-- Module 2 -->
+                <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 hover:border-purple-500/50 transition-all cursor-pointer group" onclick="showSection('quiz')">
+                    <div class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Knowledge Check</h3>
+                    <p class="text-slate-400 text-sm mb-4">Test your understanding with scenario-based questions</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-slate-500">15 Questions</span>
+                        <span class="text-purple-400 text-sm font-medium">Quiz →</span>
+                    </div>
+                </div>
+
+                <!-- Module 3 -->
+                <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 hover:border-green-500/50 transition-all cursor-pointer group" onclick="showSection('matching')">
+                    <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Match Concepts</h3>
+                    <p class="text-slate-400 text-sm mb-4">Connect policies, standards, and frameworks with their purposes</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-slate-500">8 Pairs</span>
+                        <span class="text-green-400 text-sm font-medium">Match →</span>
+                    </div>
+                </div>
+
+                <!-- Quick Reference -->
+                <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 md:col-span-2 lg:col-span-3">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Quick Reference: Policy Hierarchy
+                    </h3>
+                    <div class="grid md:grid-cols-3 gap-4">
+                        <div class="bg-slate-900/50 p-4 rounded-lg border-l-4 border-red-500">
+                            <div class="text-red-400 font-bold text-sm mb-1">POLICY</div>
+                            <div class="text-xs text-slate-400 mb-2">The "What" and "Why"</div>
+                            <div class="text-sm">High-level statements of intent (Executive level)</div>
+                            <div class="mt-2 text-xs text-slate-500 mono">Example: Acceptable Use Policy</div>
+                        </div>
+                        <div class="bg-slate-900/50 p-4 rounded-lg border-l-4 border-yellow-500">
+                            <div class="text-yellow-400 font-bold text-sm mb-1">STANDARD</div>
+                            <div class="text-xs text-slate-400 mb-2">The "Must"</div>
+                            <div class="text-sm">Mandatory requirements or configurations</div>
+                            <div class="mt-2 text-xs text-slate-500 mono">Example: Password Complexity</div>
+                        </div>
+                        <div class="bg-slate-900/50 p-4 rounded-lg border-l-4 border-green-500">
+                            <div class="text-green-400 font-bold text-sm mb-1">PRACTICE</div>
+                            <div class="text-xs text-slate-400 mb-2">The "How"</div>
+                            <div class="text-sm">Step-by-step instructions (Technical level)</div>
+                            <div class="mt-2 text-xs text-slate-500 mono">Example: Onboarding Procedure</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Flashcards Section -->
+        <section id="flashcards" class="hidden max-w-4xl mx-auto px-4 py-12">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-bold">Security Flashcards</h2>
+                <div class="flex items-center gap-4">
+                    <span class="text-slate-400">Card <span id="current-card" class="text-white font-bold">1</span> / <span id="total-cards">20</span></span>
+                    <button onclick="shuffleFlashcards()" class="p-2 hover:bg-slate-700 rounded-lg transition-colors" title="Shuffle">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="perspective-1000 w-full h-96 mb-8 cursor-pointer" onclick="flipCard()">
+                <div id="flashcard-inner" class="relative w-full h-full transform-style-3d transition-transform duration-500">
+                    <!-- Front -->
+                    <div class="absolute w-full h-full backface-hidden bg-slate-800 rounded-2xl border border-slate-600 p-8 flex flex-col items-center justify-center shadow-2xl">
+                        <div class="text-blue-400 text-sm font-mono mb-4 uppercase tracking-wider">Term</div>
+                        <h3 id="card-front" class="text-3xl font-bold text-center">CIA Triad</h3>
+                        <div class="mt-8 text-slate-500 text-sm">Click to reveal definition</div>
+                    </div>
+                    <!-- Back -->
+                    <div class="absolute w-full h-full backface-hidden rotate-y-180 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-blue-500/30 p-8 flex flex-col items-center justify-center shadow-2xl">
+                        <div class="text-green-400 text-sm font-mono mb-4 uppercase tracking-wider">Definition</div>
+                        <p id="card-back" class="text-xl text-center leading-relaxed">The three core principles of information security: Confidentiality (protection from unauthorized access), Integrity (accuracy and completeness), and Availability (accessible when needed).</p>
+                        <div class="mt-6 flex gap-2">
+                            <span class="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs">Core Concept</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-center gap-4">
+                <button onclick="prevCard()" class="px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold transition-all flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    Previous
+                </button>
+                <button onclick="markKnown()" class="px-6 py-3 bg-green-600 hover:bg-green-700 rounded-lg font-semibold transition-all flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    Got it
+                </button>
+                <button onclick="nextCard()" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition-all flex items-center gap-2">
+                    Next
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+            </div>
+
+            <div class="mt-8 flex justify-center gap-2 flex-wrap" id="card-indicators"></div>
+        </section>
+
+        <!-- Quiz Section -->
+        <section id="quiz" class="hidden max-w-3xl mx-auto px-4 py-12">
+            <div class="mb-8">
+                <div class="flex justify-between items-end mb-2">
+                    <h2 class="text-3xl font-bold">Security Quiz</h2>
+                    <span class="text-slate-400">Score: <span id="quiz-score" class="text-white font-bold">0</span></span>
+                </div>
+                <div class="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+                    <div id="quiz-progress" class="h-full bg-purple-500 transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div id="quiz-container" class="bg-slate-800 rounded-2xl border border-slate-700 p-8 shadow-2xl">
+                <div class="mb-6">
+                    <span class="text-purple-400 text-sm font-mono uppercase tracking-wider">Question <span id="q-current">1</span></span>
+                    <h3 id="q-text" class="text-xl font-bold mt-2 leading-relaxed">What is the primary purpose of an Enterprise Information Security Policy (EISP)?</h3>
+                </div>
+
+                <div id="q-options" class="space-y-3">
+                    <!-- Options injected by JS -->
+                </div>
+
+                <div id="q-feedback" class="mt-6 hidden p-4 rounded-lg border"></div>
+
+                <div class="mt-6 flex justify-between">
+                    <button onclick="nextQuestion()" id="next-q-btn" class="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold transition-all hidden ml-auto">
+                        Next Question →
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Matching Game Section -->
+        <section id="matching" class="hidden max-w-5xl mx-auto px-4 py-12">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold mb-2">Concept Matcher</h2>
+                <p class="text-slate-400">Match the security concept with its correct description</p>
+                <div class="mt-4 text-green-400 font-mono">Matches: <span id="match-score">0</span>/8</div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8" id="matching-container">
+                <div class="space-y-3" id="match-terms">
+                    <!-- Terms -->
+                </div>
+                <div class="space-y-3" id="match-defs">
+                    <!-- Definitions -->
+                </div>
+            </div>
+
+            <div id="match-complete" class="hidden text-center mt-12">
+                <div class="text-6xl mb-4">🎉</div>
+                <h3 class="text-2xl font-bold mb-2">Perfect Match!</h3>
+                <p class="text-slate-400 mb-6">You've mastered the security concepts</p>
+                <button onclick="resetMatching()" class="px-6 py-3 bg-green-600 hover:bg-green-700 rounded-lg font-semibold">Play Again</button>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // Data
+        const flashcardsData = [
+            { term: "CIA Triad", def: "The three core principles of information security: Confidentiality (protection from unauthorized access), Integrity (accuracy and completeness), and Availability (accessible when needed).", category: "Core Concept" },
+            { term: "Defense in Depth", def: "A layered security strategy where multiple security controls are placed throughout an IT system. If one layer fails, others still protect the system (like a bank with fences, guards, vaults, and cameras).", category: "Strategy" },
+            { term: "Policy", def: "The 'What' and 'Why' - High-level statements of intent at the Executive level. Provides the legal/business basis for security decisions.", category: "Governance" },
+            { term: "Standard", def: "The 'Must' - Mandatory requirements or configurations at the Managerial level. Not optional (e.g., 'Passwords must be 14 characters').", category: "Governance" },
+            { term: "Practice (Procedure)", def: "The 'How' - Step-by-step instructions at the Technical level (e.g., 'Step 1: Verify ID, Step 2: Create AD account').", category: "Governance" },
+            { term: "EISP", def: "Enterprise Information Security Policy - The 'Constitution' of the organization. Sets strategic direction and assigns resources.", category: "Policy Type" },
+            { term: "ISSP", def: "Issue-Specific Security Policy - Focuses on specific technologies like Cloud Computing, AI Use, or Social Media.", category: "Policy Type" },
+            { term: "SysSP", def: "System-Specific Security Policy - Technical specifications for a particular system (e.g., Firewall ACLs or Database permissions).", category: "Policy Type" },
+            { term: "ISO/IEC 27001", def: "The international gold standard for Information Security Management Systems (ISMS). Provides a framework for establishing, implementing, and maintaining security.", category: "Framework" },
+            { term: "NIST CSF", def: "National Institute of Standards and Technology Cybersecurity Framework - Five functions: Identify, Protect, Detect, Respond, Recover.", category: "Framework" },
+            { term: "Bell-LaPadula Model", def: "'No read up, no write down' - Used in military/government to prevent data leaks. Focuses on confidentiality.", category: "Security Model" },
+            { term: "Biba Integrity Model", def: "'No read down, no write up' - Used in finance/research to ensure data is never corrupted by low-integrity sources.", category: "Security Model" },
+            { term: "Clark-Wilson Model", def: "Focuses on separation of duties to prevent internal fraud through well-formed transactions and access triples.", category: "Security Model" },
+            { term: "SETA", def: "Security Education, Training, and Awareness - Program to turn the 'human firewall' from the weakest link into a strong defense.", category: "Program" },
+            { term: "Zero Trust Architecture", def: "Security model that assumes the internal network is already compromised, requiring every user to re-verify identity at every access point.", category: "Architecture" },
+            { term: "BYOD", def: "Bring Your Own Device - Policy allowing employees to use personal devices for work, requiring careful governance to balance security with privacy.", category: "Policy" },
+            { term: "Data At Rest", def: "Information in storage - Protected by database encryption, physical vaulting, and access controls.", category: "Data State" },
+            { term: "Data In Transit", def: "Information in motion - Protected by TLS/SSL, VPNs, and secure protocols during transmission.", category: "Data State" },
+            { term: "Acceptable Use Policy (AUP)", def: "Policy stating employees shall not use corporate assets for personal financial gain (e.g., no Bitcoin mining on lab computers).", category: "Policy Example" },
+            { term: "Risk Management", def: "The goal of InfoSec - We cannot eliminate risk; we manage it to an acceptable level that allows the business to function.", category: "Concept" }
+        ];
+
+        const quizData = [
+            {
+                q: "What is the primary purpose of an Enterprise Information Security Policy (ISP)?",
+                options: ["Technical configuration details", "Strategic direction and resource assignment", "Step-by-step user instructions", "Network firewall rules"],
+                correct: 1,
+                explanation: "EISP is the 'Constitution' of the org, setting strategic direction at the executive level."
+            },
+            {
+                q: "In the Policy Hierarchy, what does a 'Standard' define?",
+                options: ["The 'Why' behind security", "The 'How' to implement", "The 'Must' requirements", "The suggested guidelines"],
+                correct: 2,
+                explanation: "Standards are the 'Must' - mandatory requirements that are not optional."
+            },
+            {
+                q: "Which security model uses the principle 'No read up, no write down'?",
+                options: ["Biba", "Clark-Wilson", "Bell-LaPadula", "Zero Trust"],
+                correct: 2,
+                explanation: "Bell-LaPadula focuses on confidentiality with 'No read up, no write down'."
+            },
+            {
+                q: "What does 'Defense in Depth' mean?",
+                options: ["Using the strongest encryption available", "Layering multiple security controls", "Hiring the most security staff", "Building deep underground data centers"],
+                correct: 1,
+                explanation: "It's a layered strategy where multiple controls protect the system if one fails."
+            },
+            {
+                q: "Which framework is considered the international gold standard for ISMS?",
+                options: ["NIST CSF", "ISO/IEC 27001", "COBIT", "ITIL"],
+                correct: 1,
+                explanation: "ISO/IEC 27001 is the international gold standard for Information Security Management Systems."
+            },
+            {
+                q: "What is the main focus of the Biba Integrity Model?",
+                options: ["Confidentiality", "Availability", "Preventing data corruption", "Network speed"],
+                correct: 2,
+                explanation: "Biba uses 'No read down, no write up' to ensure data is never corrupted by low-integrity sources."
+            },
+            {
+                q: "In the 'Coffee Shop Breach' scenario, what saved the company from a data breach?",
+                options: ["The Remote Work Policy alone", "Following the Practice (VPN/Encryption)", "The employee's quick reaction", "The laptop's physical lock"],
+                correct: 1,
+                explanation: "Because the Practice was followed (VPN/Encryption), the Policy was upheld and data remained secure."
+            },
+            {
+                q: "What does SETA stand for?",
+                options: ["Security Engineering and Technical Analysis", "Security Education, Training, and Awareness", "System Evaluation and Threat Assessment", "Standard Encryption and Transmission Architecture"],
+                correct: 1,
+                explanation: "SETA aims to turn the 'human firewall' from the weakest link into a strong defense."
+            },
+            {
+                q: "Which policy type focuses on specific technologies like Cloud or AI?",
+                options: ["EISP", "ISSP", "SysSP", "BYOD"],
+                correct: 1,
+                explanation: "ISSP (Issue-Specific Security Policy) focuses on specific technologies."
+            },
+            {
+                q: "What is the primary goal of Information Security?",
+                options: ["Eliminate all risks", "Risk Management to acceptable levels", "Install the most expensive tools", "Comply with all regulations"],
+                correct: 1,
+                explanation: "We cannot eliminate risk; we manage it to an acceptable level that allows business function."
+            },
+            {
+                q: "What does 'Zero Trust' architecture assume?",
+                options: ["The perimeter firewall is sufficient", "Internal network is already compromised", "All employees are trustworthy", "Encryption is not necessary"],
+                correct: 1,
+                explanation: "Zero Trust assumes the internal network is compromised, requiring re-verification at every point."
+            },
+            {
+                q: "Which is an example of Data At Rest protection?",
+                options: ["TLS encryption", "VPN tunnel", "Database encryption", "HTTPS protocol"],
+                correct: 2,
+                explanation: "Database encryption protects information in storage (At Rest)."
+            },
+            {
+                q: "What is the 'Enforcement Gap' scenario primarily about?",
+                options: ["Technical vulnerabilities", "Legal liability from unclear consent", "Network latency", "Hardware failures"],
+                correct: 1,
+                explanation: "Without clearly signed Policy outlining 'Consent to Wipe', Standard and Practice become legal liabilities."
+            },
+            {
+                q: "What does the Clark-Wilson model focus on?",
+                options: ["Network topology", "Separation of duties", "Password complexity", "Physical security"],
+                correct: 1,
+                explanation: "Clark-Wilson focuses on separation of duties to prevent internal fraud."
+            },
+            {
+                q: "Which document type provides step-by-step instructions?",
+                options: ["Policy", "Standard", "Practice/Procedure", "Guideline"],
+                correct: 2,
+                explanation: "Practices (Procedures) are the 'How' - step-by-step instructions at the technical level."}
+        ];
+
+        const matchingData = [
+            { term: "CIA Triad", def: "Confidentiality, Integrity, Availability" },
+            { term: "Bell-LaPadula", def: "No read up, no write down" },
+            { term: "ISO 27001", def: "International ISMS standard" },
+            { term: "Defense in Depth", def: "Layered security strategy" },
+            { term: "EISP", def: "Constitution of the organization" },
+            { term: "Zero Trust", def: "Assume breach, verify always" },
+            { term: "Biba Model", def: "No read down, no write up" },
+            { term: "SETA", def: "Security Education & Training" }
+        ];
+
+        // State
+        let currentCard = 0;
+        let isFlipped = false;
+        let knownCards = new Set();
+        let currentQuiz = 0;
+        let quizScore = 0;
+        let selectedOption = null;
+        let matchedPairs = 0;
+        let selectedTerm = null;
+        let selectedDef = null;
+
+        // Initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            initFlashcards();
+            initQuiz();
+            initMatching();
+            initMatrixRain();
+            updateGlobalProgress();
+        });
+
+        // Navigation
+        function showSection(sectionId) {
+            document.querySelectorAll('main > section').forEach(s => {
+                if (s.id !== 'hero') s.classList.add('hidden');
+            });
+            
+            if (sectionId === 'dashboard') {
+                document.getElementById('dashboard').classList.remove('hidden');
+            } else {
+                document.getElementById(sectionId).classList.remove('hidden');
+                window.scrollTo(0, 0);
+            }
+            
+            // Update nav active state
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-blue-400');
+                if (btn.getAttribute('onclick').includes(sectionId)) {
+                    btn.classList.add('text-blue-400');
+                }
+            });
+        }
+
+        // Flashcards
+        function initFlashcards() {
+            document.getElementById('total-cards').textContent = flashcardsData.length;
+            renderCard();
+            renderIndicators();
+        }
+
+        function renderCard() {
+            const card = flashcardsData[currentCard];
+            document.getElementById('card-front').textContent = card.term;
+            document.getElementById('card-back').innerHTML = `
+                <p class="text-xl text-center leading-relaxed mb-4">${card.def}</p>
+                <div class="flex gap-2 justify-center">
+                    <span class="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs">${card.category}</span>
+                </div>
+            `;
+            document.getElementById('current-card').textContent = currentCard + 1;
+            
+            // Reset flip
+            isFlipped = false;
+            document.getElementById('flashcard-inner').classList.remove('rotate-y-180');
+            
+            updateIndicators();
+        }
+
+        function flipCard() {
+            isFlipped = !isFlipped;
+            document.getElementById('flashcard-inner').classList.toggle('rotate-y-180');
+        }
+
+        function nextCard() {
+            currentCard = (currentCard + 1) % flashcardsData.length;
+            renderCard();
+        }
+
+        function prevCard() {
+            currentCard = (currentCard - 1 + flashcardsData.length) % flashcardsData.length;
+            renderCard();
+        }
+
+        function markKnown() {
+            knownCards.add(currentCard);
+            document.getElementById('flashcard-progress-text').textContent = `${knownCards.size}/${flashcardsData.length} cards learned`;
+            
+            // Visual feedback
+            const btn = event.target.closest('button');
+            btn.classList.add('bg-green-500');
+            setTimeout(() => btn.classList.remove('bg-green-500'), 300);
+            
+            updateGlobalProgress();
+            nextCard();
+        }
+
+        function shuffleFlashcards() {
+            flashcardsData.sort(() => Math.random() - 0.5);
+            currentCard = 0;
+            renderCard();
+        }
+
+        function renderIndicators() {
+            const container = document.getElementById('card-indicators');
+            container.innerHTML = '';
+            flashcardsData.forEach((_, idx) => {
+                const dot = document.createElement('div');
+                dot.className = `w-2 h-2 rounded-full transition-all cursor-pointer ${idx === currentCard ? 'bg-blue-500 w-4' : 'bg-slate-600'}`;
+                dot.onclick = () => { currentCard = idx; renderCard(); };
+                container.appendChild(dot);
+            });
+        }
+
+        function updateIndicators() {
+            const dots = document.getElementById('card-indicators').children;
+            Array.from(dots).forEach((dot, idx) => {
+                if (knownCards.has(idx)) {
+                    dot.classList.add('bg-green-500');
+                    dot.classList.remove('bg-slate-600', 'bg-blue-500');
+                }
+                if (idx === currentCard) {
+                    dot.classList.add('bg-blue-500', 'w-4');
+                    dot.classList.remove('bg-slate-600', 'w-2');
+                } else if (!knownCards.has(idx)) {
+                    dot.classList.remove('bg-blue-500', 'w-4');
+                    dot.classList.add('bg-slate-600', 'w-2');
+                }
+            });
+        }
+
+        // Quiz
+        function initQuiz() {
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const q = quizData[currentQuiz];
+            document.getElementById('q-current').textContent = currentQuiz + 1;
+            document.getElementById('q-text').textContent = q.q;
+            
+            const optionsDiv = document.getElementById('q-options');
+            optionsDiv.innerHTML = '';
+            
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full text-left p-4 rounded-lg border border-slate-600 hover:border-purple-500 hover:bg-slate-700/50 transition-all flex items-center gap-3';
+                btn.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-sm font-bold">${String.fromCharCode(65 + idx)}</div>
+                    <span>${opt}</span>
+                `;
+                btn.onclick = () => selectOption(idx, btn);
+                optionsDiv.appendChild(btn);
+            });
+            
+            document.getElementById('q-feedback').classList.add('hidden');
+            document.getElementById('next-q-btn').classList.add('hidden');
+            selectedOption = null;
+            
+            const progress = ((currentQuiz) / quizData.length) * 100;
+            document.getElementById('quiz-progress').style.width = `${progress}%`;
+        }
+
+        function selectOption(idx, btn) {
+            if (selectedOption !== null) return;
+            selectedOption = idx;
+            
+            const q = quizData[currentQuiz];
+            const buttons = document.getElementById('q-options').children;
+            const feedback = document.getElementById('q-feedback');
+            
+            // Disable all buttons
+            Array.from(buttons).forEach(b => b.disabled = true);
+            
+            if (idx === q.correct) {
+                btn.classList.remove('border-slate-600', 'hover:border-purple-500');
+                btn.classList.add('bg-green-600/20', 'border-green-500');
+                btn.querySelector('div').classList.add('bg-green-600');
+                quizScore += 10;
+                document.getElementById('quiz-score').textContent = quizScore;
+                feedback.className = 'mt-6 p-4 rounded-lg border bg-green-600/10 border-green-500/50';
+                feedback.innerHTML = `<div class="font-bold text-green-400 mb-1">Correct!</div>${q.explanation}`;
+                createConfetti();
+            } else {
+                btn.classList.remove('border-slate-600', 'hover:border-purple-500');
+                btn.classList.add('bg-red-600/20', 'border-red-500');
+                btn.querySelector('div').classList.add('bg-red-600');
+                
+                // Highlight correct answer
+                buttons[q.correct].classList.add('bg-green-600/20', 'border-green-500');
+                buttons[q.correct].querySelector('div').classList.add('bg-green-600');
+                
+                feedback.className = 'mt-6 p-4 rounded-lg border bg-red-600/10 border-red-500/50';
+                feedback.innerHTML = `<div class="font-bold text-red-400 mb-1">Incorrect</div>${q.explanation}`;
+            }
+            
+            feedback.classList.remove('hidden');
+            document.getElementById('next-q-btn').classList.remove('hidden');
+            updateGlobalProgress();
+        }
+
+        function nextQuestion() {
+            currentQuiz++;
+            if (currentQuiz >= quizData.length) {
+                // Quiz complete
+                document.getElementById('quiz-container').innerHTML = `
+                    <div class="text-center py-12">
+                        <div class="text-6xl mb-4">🏆</div>
+                        <h3 class="text-3xl font-bold mb-2">Quiz Complete!</h3>
+                        <p class="text-xl text-slate-400 mb-6">Final Score: ${quizScore}/${quizData.length * 10}</p>
+                        <button onclick="resetQuiz()" class="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold">Restart Quiz</button>
+                    </div>
+                `;
+                document.getElementById('quiz-progress').style.width = '100%';
+            } else {
+                renderQuestion();
+            }
+        }
+
+        function resetQuiz() {
+            currentQuiz = 0;
+            quizScore = 0;
+            document.getElementById('quiz-score').textContent = '0';
+            initQuiz();
+        }
+
+        // Matching Game
+        function initMatching() {
+            const termsContainer = document.getElementById('match-terms');
+            const defsContainer = document.getElementById('match-defs');
+            
+            // Shuffle both arrays independently
+            const shuffledTerms = [...matchingData].sort(() => Math.random() - 0.5);
+            const shuffledDefs = [...matchingData].sort(() => Math.random() - 0.5);
+            
+            termsContainer.innerHTML = '';
+            defsContainer.innerHTML = '';
+            
+            shuffledTerms.forEach((item, idx) => {
+                const div = document.createElement('div');
+                div.className = 'p-4 bg-slate-800 border border-slate-600 rounded-lg cursor-pointer hover:border-green-500 transition-all select-none';
+                div.textContent = item.term;
+                div.dataset.term = item.term;
+                div.onclick = () => selectMatch('term', item.term, div);
+                termsContainer.appendChild(div);
+            });
+            
+            shuffledDefs.forEach((item, idx) => {
+                const div = document.createElement('div');
+                div.className = 'p-4 bg-slate-800 border border-slate-600 rounded-lg cursor-pointer hover:border-green-500 transition-all select-none';
+                div.textContent = item.def;
+                div.dataset.def = item.term; // Store matching term
+                div.onclick = () => selectMatch('def', item.term, div);
+                defsContainer.appendChild(div);
+            });
+            
+            matchedPairs = 0;
+            selectedTerm = null;
+            selectedDef = null;
+            document.getElementById('match-score').textContent = '0';
+            document.getElementById('match-complete').classList.add('hidden');
+        }
+
+        function selectMatch(type, value, element) {
+            if (element.classList.contains('bg-green-600')) return;
+            
+            if (type === 'term') {
+                // Clear previous selection
+                if (selectedTerm) selectedTerm.classList.remove('border-green-500', 'bg-slate-700');
+                selectedTerm = element;
+                element.classList.add('border-green-500', 'bg-slate-700');
+            } else {
+                if (selectedDef) selectedDef.classList.remove('border-green-500', 'bg-slate-700');
+                selectedDef = element;
+                element.classList.add('border-green-500', 'bg-slate-700');
+            }
+            
+            // Check match
+            if (selectedTerm && selectedDef) {
+                if (selectedTerm.dataset.term === selectedDef.dataset.def) {
+                    // Match!
+                    selectedTerm.classList.remove('bg-slate-700', 'border-green-500', 'border-slate-600');
+                    selectedTerm.classList.add('bg-green-600', 'border-green-600');
+                    selectedDef.classList.remove('bg-slate-700', 'border-green-500', 'border-slate-600');
+                    selectedDef.classList.add('bg-green-600', 'border-green-600');
+                    
+                    matchedPairs++;
+                    document.getElementById('match-score').textContent = matchedPairs;
+                    createConfetti();
+                    
+                    if (matchedPairs === matchingData.length) {
+                        document.getElementById('match-complete').classList.remove('hidden');
+                    }
+                    
+                    selectedTerm = null;
+                    selectedDef = null;
+                } else {
+                    // No match
+                    setTimeout(() => {
+                        selectedTerm.classList.remove('border-green-500', 'bg-slate-700');
+                        selectedDef.classList.remove('border-green-500', 'bg-slate-700');
+                        selectedTerm = null;
+                        selectedDef = null;
+                    }, 500);
+                }
+            }
+        }
+
+        function resetMatching() {
+            initMatching();
+        }
+
+        // Global Progress
+        function updateGlobalProgress() {
+            const flashProgress = (knownCards.size / flashcardsData.length) * 100;
+            const quizProgress = (currentQuiz / quizData.length) * 100;
+            const matchProgress = (matchedPairs / matchingData.length) * 100;
+            
+            const totalProgress = Math.round((flashProgress + quizProgress + matchProgress) / 3);
+            document.getElementById('global-progress').textContent = `${totalProgress}%`;
+            document.getElementById('global-progress-bar').style.width = `${totalProgress}%`;
+        }
+
+        // Matrix Rain Effect
+        function initMatrixRain() {
+            const canvas = document.getElementById('matrixCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = window.innerWidth;
+            canvas.height = 400;
+            
+            const chars = '01SECURITYPOLICYBLUEPRINTFRAMEWORK';
+            const fontSize = 14;
+            const columns = canvas.width / fontSize;
+            const drops = [];
+            
+            for (let i = 0; i < columns; i++) {
+                drops[i] = Math.random() * -100;
+            }
+            
+            function draw() {
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.fillStyle = '#0f0';
+                ctx.font = fontSize + 'px monospace';
+                
+                for (let i = 0; i < drops.length; i++) {
+                    const text = chars[Math.floor(Math.random() * chars.length)];
+                    ctx.fillStyle = Math.random() > 0.98 ? '#fff' : '#0f0';
+                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                    
+                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                    drops[i]++;
+                }
+            }
+            
+            setInterval(draw, 35);
+            
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+            });
+        }
+
+        // Confetti Effect
+        function createConfetti() {
+            const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+            for (let i = 0; i < 30; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animation = `confetti-fall ${Math.random() * 2 + 2}s linear forwards`;
+                document.body.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 4000);
+            }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (document.getElementById('flashcards').classList.contains('hidden')) return;
+            
+            if (e.code === 'Space') {
+                e.preventDefault();
+                flipCard();
+            } else if (e.code === 'ArrowRight') {
+                nextCard();
+            } else if (e.code === 'ArrowLeft') {
+                prevCard();
+            } else if (e.code === 'Enter') {
+                markKnown();
+            }
+        });
+    </script>
+</body>
+</html>
