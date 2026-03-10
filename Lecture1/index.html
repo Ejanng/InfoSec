@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cybersecurity CIA & MSR Model - Interactive Reviewer</title>
+    <style>
+        /* System fonts - no external dependencies */
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #ec4899;
+            --accent: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Animated Background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(6, 182, 212, 0.1) 0%, transparent 50%);
+        }
+
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            from { transform: translateY(100vh) translateX(0); }
+            to { transform: translateY(-10vh) translateX(100px); }
+        }
+
+        /* Header */
+        header {
+            padding: 2rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+            padding: 0 1rem;
+        }
+
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            border: 2px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
+            color: var(--text-secondary);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 0.9rem;
+            font-family: inherit;
+        }
+
+        .tab-btn:hover {
+            border-color: var(--primary);
+            color: var(--text-primary);
+            transform: translateY(-2px);
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 2rem 4rem;
+        }
+
+        /* Section Cards */
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .icon.confidentiality { background: rgba(99, 102, 241, 0.2); }
+        .icon.integrity { background: rgba(16, 185, 129, 0.2); }
+        .icon.availability { background: rgba(245, 158, 11, 0.2); }
+        .icon.authentication { background: rgba(236, 72, 153, 0.2); }
+        .icon.non-repudiation { background: rgba(6, 182, 212, 0.2); }
+
+        .card h2 {
+            font-size: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .objective {
+            background: rgba(255,255,255,0.05);
+            padding: 1rem;
+            border-radius: 10px;
+            border-left: 4px solid var(--primary);
+            margin-bottom: 1.5rem;
+            font-style: italic;
+            color: var(--text-secondary);
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .content-grid { grid-template-columns: 1fr; }
+            h1 { font-size: 1.8rem; }
+            .nav-tabs { gap: 0.5rem; }
+            .tab-btn { padding: 0.5rem 1rem; font-size: 0.8rem; }
+        }
+
+        .list-section h3 {
+            color: var(--secondary);
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .list-section ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .list-section li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .list-section.threats li::before {
+            content: "⚠️";
+            position: absolute;
+            left: 0;
+        }
+
+        .list-section.countermeasures li::before {
+            content: "🛡️";
+            position: absolute;
+            left: 0;
+        }
+
+        /* Quiz Styles */
+        .quiz-container {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .quiz-header h2 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .question-counter {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .question-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .question-card:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .question-text {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .option {
+            padding: 1rem 1.5rem;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .option:hover {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: var(--primary);
+            transform: translateX(5px);
+        }
+
+        .option.selected {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .option.correct {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+
+        .option.wrong {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: white;
+        }
+
+        .option-letter {
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .quiz-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Results */
+        .results-container {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .score-circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: conic-gradient(var(--success) calc(var(--score) * 1%), rgba(255,255,255,0.1) 0);
+            margin: 2rem auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .score-circle::before {
+            content: '';
+            position: absolute;
+            width: 160px;
+            height: 160px;
+            background: var(--bg-card);
+            border-radius: 50%;
+        }
+
+        .score-text {
+            position: relative;
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--success);
+        }
+
+        .feedback {
+            font-size: 1.3rem;
+            margin: 1rem 0;
+            color: var(--text-secondary);
+        }
+
+        /* Flashcards */
+        .flashcard-container {
+            perspective: 1000px;
+            max-width: 600px;
+            margin: 2rem auto;
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background: var(--bg-card);
+            border: 2px solid rgba(255,255,255,0.1);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .flashcard-back {
+            transform: rotateY(180deg);
+            background: linear-gradient(135deg, var(--bg-card), rgba(99, 102, 241, 0.1));
+        }
+
+        .flashcard-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .flashcard-title {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .flashcard-content {
+            text-align: center;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .flashcard-hint {
+            position: absolute;
+            bottom: 20px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            opacity: 0.7;
+        }
+
+        .flashcard-nav {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        /* Matching Game */
+        .matching-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            max-width: 800px;
+            margin: 2rem auto;
+        }
+
+        @media (max-width: 600px) {
+            .matching-grid { grid-template-columns: 1fr; }
+        }
+
+        .matching-item {
+            padding: 1.5rem;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            user-select: none;
+        }
+
+        .matching-item:hover {
+            border-color: var(--primary);
+            transform: scale(1.02);
+        }
+
+        .matching-item.selected {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.2);
+        }
+
+        .matching-item.matched {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.2);
+            pointer-events: none;
+        }
+
+        .matching-item.wrong {
+            border-color: var(--danger);
+            background: rgba(239, 68, 68, 0.2);
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* Analogy Visualizer */
+        .analogy-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .analogy-card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .analogy-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .analogy-visual {
+            font-size: 5rem;
+            text-align: center;
+            margin: 1rem 0;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .analogy-title {
+            font-size: 1.5rem;
+            text-align: center;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .analogy-description {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        /* Completion Badge */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-left: 1rem;
+        }
+
+        .badge.hidden {
+            display: none;
+        }
+
+        /* Confetti Animation */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            top: -10px;
+            animation: confetti-fall 3s linear forwards;
+            z-index: 9999;
+        }
+
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .container { padding: 0 1rem 2rem; }
+            .card { padding: 1.5rem; }
+            .quiz-container { padding: 1.5rem; }
+            .flashcard { height: 350px; }
+            .flashcard-title { font-size: 1.4rem; }
+            .results-container { padding: 1.5rem; }
+            .score-circle { width: 150px; height: 150px; }
+            .score-circle::before { width: 120px; height: 120px; }
+            .score-text { font-size: 2rem; }
+        }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <div class="bg-animation"></div>
+    <div class="particles" id="particles"></div>
+
+    <header>
+        <h1>Cybersecurity Fundamentals</h1>
+        <p class="subtitle">CIA Triad & MSR Model Interactive Reviewer</p>
+    </header>
+
+    <div class="progress-container">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+        <div class="progress-text">Study Progress: <span id="progressPercent">0</span>%</div>
+    </div>
+
+    <nav class="nav-tabs">
+        <button class="tab-btn active" onclick="showSection('learn')">Learn</button>
+        <button class="tab-btn" onclick="showSection('flashcards')">Flashcards</button>
+        <button class="tab-btn" onclick="showSection('quiz')">Quiz</button>
+        <button class="tab-btn" onclick="showSection('matching')">Matching</button>
+        <button class="tab-btn" onclick="showSection('analogy')">Analogy</button>
+    </nav>
+
+    <div class="container">
+        <!-- Learn Section -->
+        <div id="learn" class="section active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">5</div>
+                    <div class="stat-label">Core Principles</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">Information States</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">4</div>
+                    <div class="stat-label">Safeguard Types</div>
+                </div>
+            </div>
+
+            <!-- Confidentiality -->
+            <div class="card" data-topic="confidentiality">
+                <div class="card-header">
+                    <div class="icon confidentiality">🔐</div>
+                    <h2>1. Confidentiality <span class="badge hidden" id="badge-confidentiality">Complete</span></h2>
+                </div>
+                <div class="objective">
+                    <strong>Objective:</strong> Ensure that sensitive information is accessible only to authorized entities.
+                </div>
+                <div class="content-grid">
+                    <div class="list-section threats">
+                        <h3>Common Threats</h3>
+                        <ul>
+                            <li>Unauthorized access (hacking, phishing)</li>
+                            <li>Data leaks or eavesdropping</li>
+                            <li>Unencrypted communications</li>
+                        </ul>
+                    </div>
+                    <div class="list-section countermeasures">
+                        <h3>Countermeasures</h3>
+                        <ul>
+                            <li><strong>Encryption:</strong> AES, TLS for data at rest/transit</li>
+                            <li><strong>Access Controls:</strong> RBAC, Principle of Least Privilege</li>
+                            <li><strong>Data Masking:</strong> Hide sensitive info in testing</li>
+                            <li><strong>Network Segmentation:</strong> Separate critical systems</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Integrity -->
+            <div class="card" data-topic="integrity">
+                <div class="card-header">
+                    <div class="icon integrity">✓</div>
+                    <h2>2. Integrity <span class="badge hidden" id="badge-integrity">Complete</span></h2>
+                </div>
+                <div class="objective">
+                    <strong>Objective:</strong> Ensure information remains accurate, complete, and unaltered.
+                </div>
+                <div class="content-grid">
+                    <div class="list-section threats">
+                        <h3>Common Threats</h3>
+                        <ul>
+                            <li>Data manipulation (malicious edits)</li>
+                            <li>Transmission errors (corruption)</li>
+                            <li>Unauthorized modifications</li>
+                        </ul>
+                    </div>
+                    <div class="list-section countermeasures">
+                        <h3>Countermeasures</h3>
+                        <ul>
+                            <li><strong>Cryptographic Hashing:</strong> SHA-256 verification</li>
+                            <li><strong>Digital Signatures:</strong> Authenticate source</li>
+                            <li><strong>Audit Trails:</strong> Detailed logs & monitoring</li>
+                            <li><strong>Redundancy:</strong> RAID configurations</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Availability -->
+            <div class="card" data-topic="availability">
+                <div class="card-header">
+                    <div class="icon availability">⚡</div>
+                    <h2>3. Availability <span class="badge hidden" id="badge-availability">Complete</span></h2>
+                </div>
+                <div class="objective">
+                    <strong>Objective:</strong> Ensure systems and data are accessible when needed.
+                </div>
+                <div class="content-grid">
+                    <div class="list-section threats">
+                        <h3>Common Threats</h3>
+                        <ul>
+                            <li>DoS/DDoS attacks</li>
+                            <li>System failures (hardware issues)</li>
+                            <li>Natural disasters</li>
+                        </ul>
+                    </div>
+                    <div class="list-section countermeasures">
+                        <h3>Countermeasures</h3>
+                        <ul>
+                            <li><strong>Redundancy:</strong> Backup servers, load balancers</li>
+                            <li><strong>DDoS Mitigation:</strong> Traffic filtering</li>
+                            <li><strong>Regular Backups:</strong> Geographically distributed</li>
+                            <li><strong>Disaster Recovery:</strong> Tested recovery strategies</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Authentication -->
+            <div class="card" data-topic="authentication">
+                <div class="card-header">
+                    <div class="icon authentication">ID</div>
+                    <h2>4. Authentication <span class="badge hidden" id="badge-authentication">Complete</span></h2>
+                </div>
+                <div class="objective">
+                    <strong>Objective:</strong> Ensure users and systems are who they claim to be.
+                </div>
+                <div class="content-grid">
+                    <div class="list-section threats">
+                        <h3>Common Threats</h3>
+                        <ul>
+                            <li>Impersonation attacks</li>
+                            <li>Stolen credentials</li>
+                            <li>Weak or compromised passwords</li>
+                        </ul>
+                    </div>
+                    <div class="list-section countermeasures">
+                        <h3>Countermeasures</h3>
+                        <ul>
+                            <li><strong>Multi-Factor Authentication (MFA):</strong> Password + biometrics</li>
+                            <li><strong>Strong Password Policies:</strong> Complex & rotation</li>
+                            <li><strong>Biometric Authentication:</strong> Fingerprints, facial recognition</li>
+                            <li><strong>Session Management:</strong> Secure cookies, timeouts</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Non-repudiation -->
+            <div class="card" data-topic="non-repudiation">
+                <div class="card-header">
+                    <div class="icon non-repudiation">✎</div>
+                    <h2>5. Non-repudiation <span class="badge hidden" id="badge-non-repudiation">Complete</span></h2>
+                </div>
+                <div class="objective">
+                    <strong>Objective:</strong> Ensure individuals cannot deny actions or transactions they performed.
+                </div>
+                <div class="content-grid">
+                    <div class="list-section threats">
+                        <h3>Common Threats</h3>
+                        <ul>
+                            <li>Users denying sent data</li>
+                            <li>Fraudulent denial of transactions</li>
+                            <li>Repudiation of message sending</li>
+                        </ul>
+                    </div>
+                    <div class="list-section countermeasures">
+                        <h3>Countermeasures</h3>
+                        <ul>
+                            <li><strong>Digital Signatures:</strong> Bind identity to message</li>
+                            <li><strong>Public Key Infrastructure (PKI):</strong> Certificates & keys</li>
+                            <li><strong>Transaction Logs:</strong> Tamper-proof records</li>
+                            <li><strong>Time Stamping:</strong> Trusted third-party validation</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Integrated Countermeasures -->
+            <div class="card" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(236, 72, 153, 0.1));">
+                <div class="card-header">
+                    <div class="icon" style="background: rgba(255,255,255,0.1); color: white;">🛡</div>
+                    <h2>Integrated Countermeasures</h2>
+                </div>
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                    Many threats target multiple aspects simultaneously (e.g., ransomware attacks Confidentiality, Integrity, and Availability).
+                </p>
+                <div class="content-grid">
+                    <div class="list-section countermeasures">
+                        <h3>Examples</h3>
+                        <ul>
+                            <li><strong>IDPS:</strong> Monitor network traffic for suspicious activities</li>
+                            <li><strong>Zero Trust Architecture:</strong> Assume no trust by default</li>
+                            <li><strong>Regular Security Audits:</strong> Periodic evaluations</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MSR Model -->
+            <div class="card" data-topic="msr">
+                <div class="card-header">
+                    <div class="icon" style="background: rgba(6, 182, 212, 0.2); color: var(--accent);">📊</div>
+                    <h2>MSR Model <span class="badge hidden" id="badge-msr">Complete</span></h2>
+                </div>
+                <div class="objective">
+                    <strong>Objective:</strong> Comprehensive security framework beyond CIA Triad.
+                </div>
+                <div class="content-grid">
+                    <div>
+                        <h3 style="color: var(--accent); margin-bottom: 1rem;">Goals (CIA)</h3>
+                        <ul style="list-style: none; color: var(--text-secondary);">
+                            <li>• Confidentiality</li>
+                            <li>• Integrity</li>
+                            <li>• Availability</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 style="color: var(--accent); margin-bottom: 1rem;">Information States</h3>
+                        <ul style="list-style: none; color: var(--text-secondary);">
+                            <li>• <strong>Storage:</strong> At rest (locked safe)</li>
+                            <li>• <strong>Transmission:</strong> In transit (secure transfer)</li>
+                            <li>• <strong>Processing:</strong> In use (active handling)</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 style="color: var(--accent); margin-bottom: 1rem;">Safeguards</h3>
+                        <ul style="list-style: none; color: var(--text-secondary);">
+                            <li>• <strong>Policies:</strong> Rules (lock door at night)</li>
+                            <li>• <strong>Procedures:</strong> Steps (check alarm)</li>
+                            <li>• <strong>Practices:</strong> Habits (don't share keys)</li>
+                            <li>• <strong>Technologies:</strong> Tools (smart locks)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flashcards Section -->
+        <div id="flashcards" class="section">
+            <div class="quiz-header">
+                <h2>Study Flashcards</h2>
+                <p class="question-counter">Click card to flip • Test your memory</p>
+            </div>
+
+            <div class="flashcard-container">
+                <div class="flashcard" id="flashcard" onclick="flipCard()">
+                    <div class="flashcard-face flashcard-front">
+                        <div class="flashcard-icon" id="cardIcon">🔐</div>
+                        <h3 class="flashcard-title" id="cardTitle">Confidentiality</h3>
+                        <p class="flashcard-content" id="cardFront">What is the primary objective of Confidentiality?</p>
+                        <span class="flashcard-hint">Click to reveal answer</span>
+                    </div>
+                    <div class="flashcard-face flashcard-back">
+                        <div class="flashcard-icon">💡</div>
+                        <h3 class="flashcard-title">Answer</h3>
+                        <p class="flashcard-content" id="cardBack">Ensure sensitive information is accessible only to authorized entities. Protects against unauthorized access and data leaks using encryption, access controls, and network segmentation.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flashcard-nav">
+                <button class="btn btn-secondary" onclick="prevCard()">Previous</button>
+                <button class="btn btn-primary" onclick="nextCard()">Next</button>
+            </div>
+
+            <div style="text-align: center; margin-top: 1rem; color: var(--text-secondary);">
+                Card <span id="cardNum">1</span> of <span id="totalCards">10</span>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div id="quiz" class="section">
+            <div class="quiz-container">
+                <div class="quiz-header">
+                    <h2>Knowledge Check</h2>
+                    <p class="question-counter">Question <span id="currentQ">1</span> of <span id="totalQ">8</span></p>
+                </div>
+
+                <div id="quizContent">
+                    <div class="question-card">
+                        <div class="question-text" id="questionText">Loading...</div>
+                        <div class="options" id="options"></div>
+                    </div>
+
+                    <div class="quiz-controls">
+                        <button class="btn btn-secondary" id="prevBtn" onclick="prevQuestion()" disabled>Previous</button>
+                        <button class="btn btn-primary" id="nextBtn" onclick="nextQuestion()" disabled>Next</button>
+                    </div>
+                </div>
+
+                <div id="quizResults" style="display: none;">
+                    <div class="results-container">
+                        <h2>Quiz Complete!</h2>
+                        <div class="score-circle" id="scoreCircle" style="--score: 0;">
+                            <span class="score-text" id="scoreText">0%</span>
+                        </div>
+                        <p class="feedback" id="feedback">Complete the quiz to see your score</p>
+                        <button class="btn btn-primary" onclick="restartQuiz()" style="margin-top: 2rem;">Restart Quiz</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Matching Game -->
+        <div id="matching" class="section">
+            <div class="quiz-header">
+                <h2>Matching Game</h2>
+                <p class="question-counter">Match the concept with its description</p>
+            </div>
+
+            <div style="text-align: center; margin-bottom: 1rem;">
+                <span style="color: var(--text-secondary);">Matches found: </span>
+                <span id="matchScore" style="color: var(--success); font-weight: 700; font-size: 1.2rem;">0/6</span>
+            </div>
+
+            <div class="matching-grid" id="matchingGrid"></div>
+
+            <div style="text-align: center; margin-top: 2rem;">
+                <button class="btn btn-primary" onclick="initMatching()">New Game</button>
+            </div>
+        </div>
+
+        <!-- Analogy Section -->
+        <div id="analogy" class="section">
+            <div class="quiz-header">
+                <h2>The House Analogy</h2>
+                <p class="question-counter">Understanding security through real-world comparison</p>
+            </div>
+
+            <div class="analogy-container">
+                <div class="analogy-card">
+                    <div class="analogy-visual">🔒</div>
+                    <h3 class="analogy-title">Confidentiality</h3>
+                    <p class="analogy-description">
+                        Like having <strong>locks, curtains, and security systems</strong> to ensure only authorized people (homeowners) can enter or see inside. Prevents snooping by outsiders.
+                    </p>
+                    <div style="margin-top: 1rem; padding: 1rem; background: rgba(99, 102, 241, 0.1); border-radius: 8px; font-size: 0.9rem;">
+                        <strong>Example:</strong> Burglar alarm ensures unauthorized entry is detected
+                    </div>
+                </div>
+
+                <div class="analogy-card">
+                    <div class="analogy-visual">🏗</div>
+                    <h3 class="analogy-title">Integrity</h3>
+                    <p class="analogy-description">
+                        Like ensuring the <strong>house structure</strong> (walls, roof, plumbing) is well-maintained and nothing inside (furniture, documents) is tampered with or damaged.
+                    </p>
+                    <div style="margin-top: 1rem; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px; font-size: 0.9rem;">
+                        <strong>Example:</strong> Checking that important family documents remain unchanged
+                    </div>
+                </div>
+
+                <div class="analogy-card">
+                    <div class="analogy-visual">🔑</div>
+                    <h3 class="analogy-title">Availability</h3>
+                    <p class="analogy-description">
+                        Ensures the house and amenities <strong>(water, electricity, internet)</strong> are always accessible when needed. You can always enter when necessary.
+                    </p>
+                    <div style="margin-top: 1rem; padding: 1rem; background: rgba(245, 158, 11, 0.1); border-radius: 8px; font-size: 0.9rem;">
+                        <strong>Example:</strong> Spare key ensures access even if main key is lost
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 2rem;">
+                <h3 style="margin-bottom: 1rem; color: var(--accent);">MSR Model Extension</h3>
+                <div class="content-grid">
+                    <div>
+                        <h4 style="color: var(--secondary); margin-bottom: 0.5rem;">Storage (At Rest)</h4>
+                        <p style="color: var(--text-secondary);">Valuables locked in a safe inside the house</p>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--secondary); margin-bottom: 0.5rem;">Transmission (In Transit)</h4>
+                        <p style="color: var(--text-secondary);">Securely sending valuables to a bank</p>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--secondary); margin-bottom: 0.5rem;">Processing (In Use)</h4>
+                        <p style="color: var(--text-secondary);">Opening the safe to retrieve documents</p>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--secondary); margin-bottom: 0.5rem;">Safeguards</h4>
+                        <p style="color: var(--text-secondary);">Policies, procedures, practices, and technologies</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Particle Animation
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 20 + 's';
+                particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+                container.appendChild(particle);
+            }
+        }
+        createParticles();
+
+        // Tab Navigation
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+            document.getElementById(sectionId).classList.add('active');
+            event.target.classList.add('active');
+
+            if (sectionId === 'matching') initMatching();
+            if (sectionId === 'quiz' && currentQuestion === 0) loadQuestion();
+        }
+
+        // Progress Tracking
+        let viewedTopics = new Set();
+        const totalTopics = 6;
+
+        function updateProgress() {
+            const percent = Math.round((viewedTopics.size / totalTopics) * 100);
+            document.getElementById('progressFill').style.width = percent + '%';
+            document.getElementById('progressPercent').textContent = percent;
+        }
+
+        // Intersection Observer for tracking viewed cards
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const topic = entry.target.dataset.topic;
+                    if (topic) {
+                        viewedTopics.add(topic);
+                        const badge = document.getElementById('badge-' + topic);
+                        if (badge) badge.classList.remove('hidden');
+                        updateProgress();
+                    }
+                }
+            });
+        }, { threshold: 0.5 });
+
+        document.querySelectorAll('.card[data-topic]').forEach(card => {
+            observer.observe(card);
+        });
+
+        // Flashcards Data
+        const flashcards = [
+            { icon: '🔐', title: 'Confidentiality', front: 'What is the primary objective of Confidentiality?', back: 'Ensure sensitive information is accessible only to authorized entities. Uses encryption (AES, TLS), access controls (RBAC), and network segmentation.' },
+            { icon: '✓', title: 'Integrity', front: 'How do we ensure data Integrity?', back: 'Use cryptographic hashing (SHA-256), digital signatures, audit trails, and redundant storage (RAID) to prevent unauthorized modifications.' },
+            { icon: '⚡', title: 'Availability', front: 'What threatens Availability and how do we protect it?', back: 'Threats: DoS/DDoS attacks, hardware failures. Protection: Redundancy, load balancers, DDoS mitigation, regular backups, disaster recovery plans.' },
+            { icon: 'ID', title: 'Authentication', front: 'What are effective Authentication methods?', back: 'Multi-Factor Authentication (MFA), strong password policies, biometrics (fingerprints, facial recognition), and secure session management.' },
+            { icon: '✎', title: 'Non-repudiation', front: 'How do we achieve Non-repudiation?', back: 'Digital signatures bind identity to messages, PKI certificates ensure authenticity, tamper-proof transaction logs, and trusted time stamping.' },
+            { icon: '🛡', title: 'Encryption', front: 'What is the difference between data at rest and in transit?', back: 'Data at rest: stored data protected by AES. Data in transit: moving data protected by TLS/SSL during transmission.' },
+            { icon: '🔑', title: 'RBAC', front: 'What is Role-Based Access Control (RBAC)?', back: 'Access control method that restricts system access based on user roles within an organization. Implements Principle of Least Privilege (POLP).' },
+            { icon: '🏛', title: 'PKI', front: 'What is Public Key Infrastructure (PKI)?', back: 'System of certificates, keys, and authorities that verify and authenticate the validity of parties involved in electronic transactions.' },
+            { icon: '⚠', title: 'DDoS', front: 'What is a DDoS attack?', back: 'Distributed Denial of Service attack where multiple compromised systems flood a target with traffic, making it unavailable to legitimate users.' },
+            { icon: '📊', title: 'MSR Model', front: 'What are the three components of the MSR Model?', back: 'Goals (CIA Triad), Information States (Storage, Transmission, Processing), and Safeguards (Policies, Procedures, Practices, Technologies).' }
+        ];
+
+        let currentCard = 0;
+
+        function updateCard() {
+            const card = flashcards[currentCard];
+            document.getElementById('cardIcon').textContent = card.icon;
+            document.getElementById('cardTitle').textContent = card.title;
+            document.getElementById('cardFront').textContent = card.front;
+            document.getElementById('cardBack').textContent = card.back;
+            document.getElementById('cardNum').textContent = currentCard + 1;
+            document.getElementById('totalCards').textContent = flashcards.length;
+            document.getElementById('flashcard').classList.remove('flipped');
+        }
+
+        function flipCard() {
+            document.getElementById('flashcard').classList.toggle('flipped');
+        }
+
+        function nextCard() {
+            currentCard = (currentCard + 1) % flashcards.length;
+            updateCard();
+        }
+
+        function prevCard() {
+            currentCard = (currentCard - 1 + flashcards.length) % flashcards.length;
+            updateCard();
+        }
+
+        updateCard();
+
+        // Quiz Data
+        const quizQuestions = [
+            {
+                question: "Which encryption protocol is recommended for protecting data in transit?",
+                options: ["AES", "TLS", "SHA-256", "RSA"],
+                correct: 1,
+                explanation: "TLS (Transport Layer Security) is specifically designed to protect data in transit across networks."
+            },
+            {
+                question: "What does the Principle of Least Privilege (POLP) state?",
+                options: ["Give users maximum access", "Limit access to minimum necessary", "Allow shared passwords", "Disable all access"],
+                correct: 1,
+                explanation: "POLP states that users should only have the minimum levels of access necessary to perform their job functions."
+            },
+            {
+                question: "Which hash function is mentioned for verifying data integrity?",
+                options: ["MD5", "SHA-1", "SHA-256", "CRC32"],
+                correct: 2,
+                explanation: "SHA-256 is the cryptographic hash function mentioned in the lecture for verifying data integrity."
+            },
+            {
+                question: "What type of attack aims to make systems unavailable?",
+                options: ["Phishing", "DoS/DDoS", "Man-in-the-Middle", "SQL Injection"],
+                correct: 1,
+                explanation: "Denial of Service (DoS) and Distributed Denial of Service (DDoS) attacks aim to overwhelm systems and make them unavailable."
+            },
+            {
+                question: "Which of the following is NOT part of the CIA Triad?",
+                options: ["Confidentiality", "Integrity", "Authentication", "Availability"],
+                correct: 2,
+                explanation: "Authentication is part of the expanded MSR model, not the original CIA Triad (Confidentiality, Integrity, Availability)."
+            },
+            {
+                question: "What does MFA stand for?",
+                options: ["Multi-Function Authentication", "Multi-Factor Authentication", "Managed File Access", "Master Firewall Access"],
+                correct: 1,
+                explanation: "MFA stands for Multi-Factor Authentication, requiring multiple forms of verification."
+            },
+            {
+                question: "In the house analogy, what represents Confidentiality?",
+                options: ["Spare key", "Well-maintained structure", "Locks and curtains", "Utilities working"],
+                correct: 2,
+                explanation: "Locks, curtains, and security systems represent Confidentiality in the house analogy."
+            },
+            {
+                question: "Which safeguard type includes 'habits' like never sharing passwords?",
+                options: ["Policies", "Procedures", "Practices", "Technologies"],
+                correct: 2,
+                explanation: "Practices refer to habits and behaviors, such as never sharing keys or passwords."
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let answered = false;
+        let userAnswers = [];
+
+        function loadQuestion() {
+            const q = quizQuestions[currentQuestion];
+            document.getElementById('currentQ').textContent = currentQuestion + 1;
+            document.getElementById('totalQ').textContent = quizQuestions.length;
+            document.getElementById('questionText').textContent = q.question;
+
+            const optionsHtml = q.options.map((opt, idx) => 
+                '<div class="option" onclick="selectOption(' + idx + ')" data-idx="' + idx + '">' +
+                '<span class="option-letter">' + String.fromCharCode(65 + idx) + '</span>' +
+                '<span>' + opt + '</span>' +
+                '</div>'
+            ).join('');
+
+            document.getElementById('options').innerHTML = optionsHtml;
+            document.getElementById('nextBtn').disabled = true;
+            answered = false;
+        }
+
+        function selectOption(idx) {
+            if (answered) return;
+
+            answered = true;
+            const q = quizQuestions[currentQuestion];
+            const options = document.querySelectorAll('.option');
+
+            options.forEach((opt, i) => {
+                if (i === q.correct) {
+                    opt.classList.add('correct');
+                } else if (i === idx && i !== q.correct) {
+                    opt.classList.add('wrong');
+                }
+                if (i === idx) opt.classList.add('selected');
+            });
+
+            if (idx === q.correct) score++;
+            userAnswers[currentQuestion] = idx;
+
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        function nextQuestion() {
+            if (currentQuestion < quizQuestions.length - 1) {
+                currentQuestion++;
+                loadQuestion();
+                document.getElementById('prevBtn').disabled = false;
+            } else {
+                showResults();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                loadQuestion();
+                if (currentQuestion === 0) document.getElementById('prevBtn').disabled = true;
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quizContent').style.display = 'none';
+            document.getElementById('quizResults').style.display = 'block';
+
+            const percentage = Math.round((score / quizQuestions.length) * 100);
+            document.getElementById('scoreCircle').style.setProperty('--score', percentage);
+            document.getElementById('scoreText').textContent = percentage + '%';
+
+            let feedback = '';
+            if (percentage >= 90) feedback = 'Outstanding! You are a security expert!';
+            else if (percentage >= 70) feedback = 'Great job! You understand the concepts well!';
+            else if (percentage >= 50) feedback = 'Good effort! Review the material and try again.';
+            else feedback = 'Keep studying! Review the lecture content and come back.';
+
+            document.getElementById('feedback').textContent = feedback;
+
+            // Confetti effect for high scores
+            if (percentage >= 70) createConfetti();
+        }
+
+        function createConfetti() {
+            const colors = ['#6366f1', '#ec4899', '#06b6d4', '#10b981', '#f59e0b'];
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDelay = Math.random() * 2 + 's';
+                document.body.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 3000);
+            }
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            userAnswers = [];
+            document.getElementById('quizContent').style.display = 'block';
+            document.getElementById('quizResults').style.display = 'none';
+            document.getElementById('prevBtn').disabled = true;
+            loadQuestion();
+        }
+
+        // Matching Game
+        const matchingPairs = [
+            { term: 'Confidentiality', desc: 'Authorized access only', match: 0 },
+            { term: 'Integrity', desc: 'Data accuracy & completeness', match: 1 },
+            { term: 'Availability', desc: 'Accessible when needed', match: 2 },
+            { term: 'Authentication', desc: 'Verify identity', match: 3 },
+            { term: 'Non-repudiation', desc: 'Cannot deny actions', match: 4 },
+            { term: 'Encryption', desc: 'AES, TLS protocols', match: 5 }
+        ];
+
+        let selectedItems = [];
+        let matchesFound = 0;
+
+        function initMatching() {
+            const grid = document.getElementById('matchingGrid');
+            grid.innerHTML = '';
+            selectedItems = [];
+            matchesFound = 0;
+            document.getElementById('matchScore').textContent = '0/6';
+
+            // Create shuffled array
+            let items = [];
+            matchingPairs.forEach((pair, idx) => {
+                items.push({ type: 'term', text: pair.term, matchId: idx });
+                items.push({ type: 'desc', text: pair.desc, matchId: idx });
+            });
+
+            items.sort(() => Math.random() - 0.5);
+
+            items.forEach((item, idx) => {
+                const div = document.createElement('div');
+                div.className = 'matching-item';
+                div.textContent = item.text;
+                div.dataset.matchId = item.matchId;
+                div.dataset.type = item.type;
+                div.dataset.index = idx;
+                div.onclick = function() { selectMatch(this); };
+                grid.appendChild(div);
+            });
+        }
+
+        function selectMatch(element) {
+            if (element.classList.contains('matched')) return;
+
+            if (selectedItems.includes(element)) {
+                element.classList.remove('selected');
+                selectedItems = selectedItems.filter(el => el !== element);
+                return;
+            }
+
+            if (selectedItems.length < 2) {
+                element.classList.add('selected');
+                selectedItems.push(element);
+
+                if (selectedItems.length === 2) {
+                    checkMatch();
+                }
+            }
+        }
+
+        function checkMatch() {
+            const first = selectedItems[0];
+            const second = selectedItems[1];
+            const match = first.dataset.matchId === second.dataset.matchId && 
+                         first.dataset.type !== second.dataset.type;
+
+            setTimeout(() => {
+                if (match) {
+                    first.classList.remove('selected');
+                    second.classList.remove('selected');
+                    first.classList.add('matched');
+                    second.classList.add('matched');
+                    matchesFound++;
+                    document.getElementById('matchScore').textContent = matchesFound + '/6';
+
+                    if (matchesFound === 6) {
+                        setTimeout(() => alert('Congratulations! You matched all pairs!'), 300);
+                    }
+                } else {
+                    first.classList.remove('selected');
+                    second.classList.remove('selected');
+                    first.classList.add('wrong');
+                    second.classList.add('wrong');
+                    setTimeout(() => {
+                        first.classList.remove('wrong');
+                        second.classList.remove('wrong');
+                    }, 500);
+                }
+                selectedItems = [];
+            }, 300);
+        }
+
+        // Initialize
+        initMatching();
+    </script>
+</body>
+</html>
