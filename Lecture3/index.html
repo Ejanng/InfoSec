@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cybersecurity IAAA Interactive Reviewer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0f;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .bg-grid {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(rgba(6, 182, 212, 0.03) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(6, 182, 212, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: -1;
+        }
+        .glow-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            animation: float 20s infinite ease-in-out;
+            z-index: -1;
+        }
+        .orb-1 { width: 400px; height: 400px; background: radial-gradient(circle, rgba(6, 182, 212, 0.3), transparent); top: 10%; left: 10%; }
+        .orb-2 { width: 300px; height: 300px; background: radial-gradient(circle, rgba(139, 92, 246, 0.3), transparent); top: 60%; right: 10%; animation-delay: -5s; }
+        .orb-3 { width: 250px; height: 250px; background: radial-gradient(circle, rgba(236, 72, 153, 0.2), transparent); bottom: 10%; left: 30%; animation-delay: -10s; }
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+        .cyber-card {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.1), inset 0 0 20px rgba(6, 182, 212, 0.05);
+            transition: all 0.3s ease;
+        }
+        .cyber-card:hover {
+            border-color: rgba(6, 182, 212, 0.5);
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.2), inset 0 0 30px rgba(6, 182, 212, 0.1);
+            transform: translateY(-2px);
+        }
+        .flashcard-container { perspective: 1000px; cursor: pointer; }
+        .flashcard {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+        .flashcard.flipped { transform: rotateY(180deg); }
+        .flashcard-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            border-radius: 1rem;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.1);
+        }
+        .flashcard-back {
+            transform: rotateY(180deg);
+            background: rgba(15, 23, 42, 0.9);
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+        .quiz-option {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .quiz-option:hover {
+            background: rgba(6, 182, 212, 0.1);
+            border-color: rgba(6, 182, 212, 0.5);
+            transform: translateX(5px);
+        }
+        .quiz-option.correct { background: rgba(34, 197, 94, 0.2); border-color: rgba(34, 197, 94, 0.8); color: #4ade80; }
+        .quiz-option.wrong { background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.8); color: #f87171; }
+        .progress-fill { transition: width 0.5s ease; background: linear-gradient(90deg, #06b6d4, #8b5cf6); }
+        .match-card {
+            background: rgba(30, 41, 59, 0.8);
+            border: 2px solid rgba(6, 182, 212, 0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 1rem;
+        }
+        .match-card:hover { border-color: rgba(6, 182, 212, 0.8); box-shadow: 0 0 20px rgba(6, 182, 212, 0.2); }
+        .match-card.selected { border-color: #06b6d4; background: rgba(6, 182, 212, 0.2); box-shadow: 0 0 30px rgba(6, 182, 212, 0.3); }
+        .match-card.matched { border-color: #22c55e; background: rgba(34, 197, 94, 0.2); cursor: default; animation: matchPulse 0.5s ease; }
+        @keyframes matchPulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .tab-btn { position: relative; overflow: hidden; }
+        .tab-btn::after { content: ''; position: absolute; bottom: 0; left: 0; width: 0; height: 2px; background: linear-gradient(90deg, #06b6d4, #8b5cf6); transition: width 0.3s ease; }
+        .tab-btn.active::after { width: 100%; }
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            pointer-events: none;
+            animation: confetti-fall 3s ease-out forwards;
+        }
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+        .scanlines::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, transparent 50%, rgba(6, 182, 212, 0.03) 50%);
+            background-size: 100% 4px;
+            pointer-events: none;
+        }
+    </style>
+<base target="_blank">
+</head>
+<body class="min-h-screen">
+    <div class="bg-grid"></div>
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    <div class="glow-orb orb-3"></div>
+
+    <header class="relative z-10 p-6 border-b border-cyan-900/30 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center font-mono font-bold text-lg">🔒</div>
+                <div>
+                    <h1 class="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">CyberSec IAAA</h1>
+                    <p class="text-xs text-slate-400 font-mono">LECTURE 3 REVIEWER // v2.0.26</p>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <div class="px-3 py-1 rounded-full bg-cyan-900/30 border border-cyan-500/30 text-cyan-400 text-xs font-mono"><span id="score-display">Score: 0</span></div>
+                <div class="px-3 py-1 rounded-full bg-purple-900/30 border border-purple-500/30 text-purple-400 text-xs font-mono"><span id="streak-display">Streak: 0</span></div>
+            </div>
+        </div>
+    </header>
+
+    <main class="relative z-10 max-w-7xl mx-auto p-6">
+        <div class="flex gap-2 mb-8 overflow-x-auto pb-2">
+            <button onclick="switchMode('dashboard')" class="tab-btn active px-6 py-3 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 transition-all text-sm font-semibold whitespace-nowrap" data-mode="dashboard">📊 Dashboard</button>
+            <button onclick="switchMode('flashcards')" class="tab-btn px-6 py-3 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 transition-all text-sm font-semibold whitespace-nowrap" data-mode="flashcards">🃏 Flashcards</button>
+            <button onclick="switchMode('quiz')" class="tab-btn px-6 py-3 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 transition-all text-sm font-semibold whitespace-nowrap" data-mode="quiz">❓ Quiz Challenge</button>
+            <button onclick="switchMode('matching')" class="tab-btn px-6 py-3 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 transition-all text-sm font-semibold whitespace-nowrap" data-mode="matching">🧩 Matching Game</button>
+            <button onclick="switchMode('scenario')" class="tab-btn px-6 py-3 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 transition-all text-sm font-semibold whitespace-nowrap" data-mode="scenario">🎮 Scenario Sim</button>
+        </div>
+
+        <!-- Dashboard Mode -->
+        <div id="dashboard-mode" class="mode-content">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="cyber-card rounded-xl p-6 col-span-full lg:col-span-2">
+                    <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><span class="text-cyan-400">⚡</span> IAAA Framework</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-slate-800/50 rounded-lg p-4 border border-cyan-500/20 hover:border-cyan-500/50 transition-all cursor-pointer group" onclick="showDetail('identification')">
+                            <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">👤</div>
+                            <h3 class="font-bold text-cyan-400 text-sm">Identification</h3>
+                            <p class="text-xs text-slate-400 mt-1">"Who are you?"</p>
+                        </div>
+                        <div class="bg-slate-800/50 rounded-lg p-4 border border-purple-500/20 hover:border-purple-500/50 transition-all cursor-pointer group" onclick="showDetail('authentication')">
+                            <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">🔐</div>
+                            <h3 class="font-bold text-purple-400 text-sm">Authentication</h3>
+                            <p class="text-xs text-slate-400 mt-1">"Prove it!"</p>
+                        </div>
+                        <div class="bg-slate-800/50 rounded-lg p-4 border border-pink-500/20 hover:border-pink-500/50 transition-all cursor-pointer group" onclick="showDetail('authorization')">
+                            <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">🛡️</div>
+                            <h3 class="font-bold text-pink-400 text-sm">Authorization</h3>
+                            <p class="text-xs text-slate-400 mt-1">"What can you do?"</p>
+                        </div>
+                        <div class="bg-slate-800/50 rounded-lg p-4 border border-emerald-500/20 hover:border-emerald-500/50 transition-all cursor-pointer group" onclick="showDetail('accountability')">
+                            <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">📋</div>
+                            <h3 class="font-bold text-emerald-400 text-sm">Accountability</h3>
+                            <p class="text-xs text-slate-400 mt-1">"Keep a record"</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cyber-card rounded-xl p-6">
+                    <h2 class="text-lg font-bold mb-4 text-orange-400">⚠️ Risk Formula</h2>
+                    <div class="bg-slate-900/50 rounded-lg p-4 font-mono text-center">
+                        <div class="text-2xl font-bold text-white mb-2">Risk =</div>
+                        <div class="flex items-center justify-center gap-2 text-lg">
+                            <span class="text-red-400">Threat</span>
+                            <span class="text-slate-500">×</span>
+                            <span class="text-yellow-400">Vulnerability</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 space-y-2 text-sm">
+                        <div class="flex justify-between items-center"><span class="text-slate-400">Assets</span><span class="text-cyan-400 font-mono">💎 Value</span></div>
+                        <div class="flex justify-between items-center"><span class="text-slate-400">Controls</span><span class="text-green-400 font-mono">🛡️ Protection</span></div>
+                    </div>
+                </div>
+
+                <div class="cyber-card rounded-xl p-6">
+                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2"><span class="text-cyan-400">📈</span> Your Progress</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1"><span class="text-slate-400">Flashcards Mastered</span><span class="text-cyan-400" id="flash-progress">0/20</span></div>
+                            <div class="h-2 bg-slate-800 rounded-full overflow-hidden"><div class="progress-fill h-full rounded-full" id="flash-bar" style="width: 0%"></div></div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1"><span class="text-slate-400">Quiz Accuracy</span><span class="text-purple-400" id="quiz-progress">0%</span></div>
+                            <div class="h-2 bg-slate-800 rounded-full overflow-hidden"><div class="progress-fill h-full rounded-full" id="quiz-bar" style="width: 0%"></div></div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1"><span class="text-slate-400">Matching Completed</span><span class="text-pink-400" id="match-progress">0/5</span></div>
+                            <div class="h-2 bg-slate-800 rounded-full overflow-hidden"><div class="progress-fill h-full rounded-full" id="match-bar" style="width: 0%"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cyber-card rounded-xl p-6 col-span-full lg:col-span-2">
+                    <h2 class="text-lg font-bold mb-4">🎯 Key Concepts Map</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        <div class="bg-gradient-to-br from-slate-800 to-slate-900 p-3 rounded-lg border border-slate-700 hover:border-cyan-500/50 transition-all cursor-pointer" onclick="showConcept('assets')">
+                            <div class="text-cyan-400 font-semibold text-sm">Assets</div>
+                            <div class="text-xs text-slate-400 mt-1">Data, hardware, software, people</div>
+                        </div>
+                        <div class="bg-gradient-to-br from-slate-800 to-slate-900 p-3 rounded-lg border border-slate-700 hover:border-red-500/50 transition-all cursor-pointer" onclick="showConcept('threats')">
+                            <div class="text-red-400 font-semibold text-sm">Threats</div>
+                            <div class="text-xs text-slate-400 mt-1">Hackers, malware, phishing</div>
+                        </div>
+                        <div class="bg-gradient-to-br from-slate-800 to-slate-900 p-3 rounded-lg border border-slate-700 hover:border-yellow-500/50 transition-all cursor-pointer" onclick="showConcept('vulnerabilities')">
+                            <div class="text-yellow-400 font-semibold text-sm">Vulnerabilities</div>
+                            <div class="text-xs text-slate-400 mt-1">Weak passwords, unpatched systems</div>
+                        </div>
+                        <div class="bg-gradient-to-br from-slate-800 to-slate-900 p-3 rounded-lg border border-slate-700 hover:border-orange-500/50 transition-all cursor-pointer" onclick="showConcept('risk')">
+                            <div class="text-orange-400 font-semibold text-sm">Risk</div>
+                            <div class="text-xs text-slate-400 mt-1">Threat × Vulnerability</div>
+                        </div>
+                        <div class="bg-gradient-to-br from-slate-800 to-slate-900 p-3 rounded-lg border border-slate-700 hover:border-green-500/50 transition-all cursor-pointer" onclick="showConcept('controls')">
+                            <div class="text-green-400 font-semibold text-sm">Controls</div>
+                            <div class="text-xs text-slate-400 mt-1">Firewalls, MFA, encryption</div>
+                        </div>
+                        <div class="bg-gradient-to-br from-slate-800 to-slate-900 p-3 rounded-lg border border-slate-700 hover:border-blue-500/50 transition-all cursor-pointer" onclick="showConcept('iaaa')">
+                            <div class="text-blue-400 font-semibold text-sm">IAAA Tools</div>
+                            <div class="text-xs text-slate-400 mt-1">Splunk, IAM, OAuth2, MFA</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="detail-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+                <div class="cyber-card rounded-xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto relative">
+                    <button onclick="closeDetail()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-2xl">&times;</button>
+                    <div id="detail-content"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flashcards Mode -->
+        <div id="flashcards-mode" class="mode-content hidden">
+            <div class="max-w-3xl mx-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">🃏 Flashcard Study</h2>
+                    <div class="flex gap-2">
+                        <button onclick="shuffleFlashcards()" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-all text-sm">🔀 Shuffle</button>
+                        <div class="px-4 py-2 rounded-lg bg-cyan-900/30 text-cyan-400 text-sm font-mono"><span id="flashcard-counter">1 / 20</span></div>
+                    </div>
+                </div>
+
+                <div class="flashcard-container mb-6" onclick="flipCard()">
+                    <div class="flashcard" id="flashcard">
+                        <div class="flashcard-face flashcard-front">
+                            <div class="text-cyan-400 text-sm font-mono mb-4">TERM</div>
+                            <h3 class="text-2xl font-bold text-center" id="flashcard-front">Click to Start</h3>
+                            <div class="mt-8 text-slate-500 text-sm">Click to flip ↻</div>
+                        </div>
+                        <div class="flashcard-face flashcard-back">
+                            <div class="text-purple-400 text-sm font-mono mb-4">DEFINITION</div>
+                            <p class="text-lg text-center" id="flashcard-back">Press Next to begin</p>
+                            <div class="mt-6 flex gap-2">
+                                <span class="px-3 py-1 rounded-full bg-cyan-900/30 text-cyan-400 text-xs" id="flashcard-category">Category</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-center gap-4">
+                    <button onclick="prevCard()" class="px-6 py-3 rounded-lg bg-slate-800 hover:bg-slate-700 transition-all font-semibold">← Previous</button>
+                    <button onclick="markKnown()" class="px-6 py-3 rounded-lg bg-green-900/30 border border-green-500/30 hover:bg-green-900/50 transition-all font-semibold text-green-400">✓ Know It</button>
+                    <button onclick="nextCard()" class="px-6 py-3 rounded-lg bg-cyan-600 hover:bg-cyan-500 transition-all font-semibold">Next →</button>
+                </div>
+
+                <div class="mt-8 grid grid-cols-10 gap-2" id="flashcard-dots"></div>
+            </div>
+        </div>
+
+        <!-- Quiz Mode -->
+        <div id="quiz-mode" class="mode-content hidden">
+            <div class="max-w-3xl mx-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">❓ Knowledge Check</h2>
+                    <div class="px-4 py-2 rounded-lg bg-purple-900/30 text-purple-400 text-sm font-mono">Question <span id="quiz-counter">1</span>/10</div>
+                </div>
+
+                <div class="cyber-card rounded-xl p-8 mb-6">
+                    <div class="mb-2 text-cyan-400 text-sm font-mono" id="quiz-category">Category</div>
+                    <h3 class="text-xl font-bold mb-6" id="quiz-question">Loading question...</h3>
+
+                    <div class="space-y-3" id="quiz-options"></div>
+
+                    <div id="quiz-explanation" class="mt-6 p-4 rounded-lg bg-slate-800/50 border border-slate-700 hidden">
+                        <div class="font-semibold mb-2" id="explanation-title"></div>
+                        <p class="text-slate-300 text-sm" id="explanation-text"></p>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center">
+                    <div class="text-sm text-slate-400">Correct: <span class="text-green-400 font-bold" id="correct-count">0</span> | Wrong: <span class="text-red-400 font-bold" id="wrong-count">0</span></div>
+                    <button onclick="nextQuestion()" id="next-btn" class="px-6 py-3 rounded-lg bg-cyan-600 hover:bg-cyan-500 transition-all font-semibold hidden">Next Question →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Matching Mode -->
+        <div id="matching-mode" class="mode-content hidden">
+            <div class="max-w-4xl mx-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">🧩 Match Concepts</h2>
+                    <div class="flex gap-4 items-center">
+                        <div class="text-sm text-slate-400">Moves: <span class="text-cyan-400 font-mono" id="moves-count">0</span></div>
+                        <div class="px-4 py-2 rounded-lg bg-pink-900/30 text-pink-400 text-sm font-mono">Pairs: <span id="pairs-found">0</span>/5</div>
+                    </div>
+                </div>
+
+                <div class="cyber-card rounded-xl p-6">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="matching-grid"></div>
+                </div>
+
+                <div id="matching-complete" class="hidden mt-6 text-center">
+                    <div class="text-4xl mb-4">🎉</div>
+                    <h3 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400 mb-2">Level Complete!</h3>
+                    <p class="text-slate-400 mb-4">You matched all pairs in <span id="final-moves" class="text-cyan-400"></span> moves</p>
+                    <button onclick="resetMatching()" class="px-6 py-3 rounded-lg bg-cyan-600 hover:bg-cyan-500 transition-all font-semibold">Play Again</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scenario Mode -->
+        <div id="scenario-mode" class="mode-content hidden">
+            <div class="max-w-4xl mx-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">🎮 Interactive Scenario</h2>
+                    <div class="px-4 py-2 rounded-lg bg-emerald-900/30 text-emerald-400 text-sm font-mono">Bank Security Simulation</div>
+                </div>
+
+                <div class="cyber-card rounded-xl p-8 mb-6 scanlines relative overflow-hidden">
+                    <div class="relative z-10">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
+                            <span class="text-red-400 font-mono text-sm animate-pulse">LIVE THREAT DETECTED</span>
+                        </div>
+
+                        <h3 class="text-xl font-bold mb-4" id="scenario-title">The Attack Begins</h3>
+                        <p class="text-slate-300 mb-6 leading-relaxed" id="scenario-text">You are a security analyst at a major bank. An alert just came in: An unknown IP address is attempting to log in using an executive's credentials.</p>
+
+                        <div class="space-y-3" id="scenario-options"></div>
+
+                        <div id="scenario-feedback" class="mt-6 p-4 rounded-lg border hidden">
+                            <div class="font-semibold mb-2" id="feedback-title"></div>
+                            <p class="text-sm" id="feedback-text"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center">
+                    <div class="flex gap-2 items-center">
+                        <div class="w-32 h-2 bg-slate-800 rounded-full overflow-hidden">
+                            <div class="h-full bg-cyan-500 transition-all" id="scenario-progress" style="width: 0%"></div>
+                        </div>
+                        <span class="text-xs text-slate-400">Progress</span>
+                    </div>
+                    <button onclick="resetScenario()" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-all text-sm">↻ Restart Scenario</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const flashcards = [
+            { front: "IAAA", back: "Identification, Authentication, Authorization, Accountability - The four pillars of access control", category: "Framework" },
+            { front: "Identification", back: "Claiming an identity (username, email, ID). 'Who are you?'", category: "IAAA" },
+            { front: "Authentication", back: "Proving identity: Something you know (password), have (token), or are (biometric)", category: "IAAA" },
+            { front: "Authorization", back: "Determining access rights (RBAC, permissions). 'What can you do?'", category: "IAAA" },
+            { front: "Accountability", back: "Tracking actions via logs (SIEM tools). 'Keep a record'", category: "IAAA" },
+            { front: "Risk Formula", back: "Risk = Threat × Vulnerability. Likelihood of damage", category: "Risk" },
+            { front: "Assets", back: "Valuable items: data, hardware, software, people, IP", category: "Assets" },
+            { front: "Threats", back: "Attackers: hackers, malware, phishing, DDoS, insiders", category: "Threats" },
+            { front: "Vulnerabilities", back: "Weaknesses: outdated software, weak passwords, unpatched systems", category: "Vulnerabilities" },
+            { front: "Controls", back: "Safeguards: firewalls, encryption, MFA, training", category: "Controls" },
+            { front: "MFA", back: "Multi-Factor Authentication. Requires 2+ verification factors", category: "Tools" },
+            { front: "RBAC", back: "Role-Based Access Control. Access based on job roles", category: "Authorization" },
+            { front: "SIEM", back: "Security Information and Event Management. Real-time log analysis", category: "Tools" },
+            { front: "OAuth 2.0", back: "Authorization framework for limited resource access without exposing credentials", category: "Tools" },
+            { front: "AWS IAM", back: "Identity and Access Management for AWS cloud resources", category: "Tools" },
+            { front: "Phishing", back: "Social engineering via fraudulent communications to steal credentials", category: "Threats" },
+            { front: "DDoS", back: "Distributed Denial of Service. Overwhelming system with traffic", category: "Threats" },
+            { front: "Encryption", back: "Converting data to code to prevent unauthorized access", category: "Controls" },
+            { front: "Firewall", back: "Network security device filtering traffic based on rules", category: "Controls" },
+            { front: "Zero Trust", back: "Security model requiring strict verification for every access request", category: "Concept" }
+        ];
+
+        const quizQuestions = [
+            { category: "IAAA", question: "Which IAAA component answers 'Who are you?'?", options: ["Authentication", "Identification", "Authorization", "Accountability"], correct: 1, explanation: "Identification claims identity (username/email) before authentication." },
+            { category: "IAAA", question: "User enters password + OTP. What phase is this?", options: ["Identification", "Authorization", "Authentication", "Accountability"], correct: 2, explanation: "Authentication proves identity using 'something you know' (password) and 'something you have' (OTP)." },
+            { category: "Risk", question: "What is the risk formula?", options: ["Assets × Threats", "Threat × Vulnerability", "Controls × Assets", "Vulnerability ÷ Controls"], correct: 1, explanation: "Risk = Threat × Vulnerability. Likelihood of threat exploiting weakness." },
+            { category: "Authorization", question: "What does RBAC do?", options: ["Monitors threats", "Restricts access by job role", "Randomizes permissions", "Temporary access"], correct: 1, explanation: "RBAC (Role-Based Access Control) restricts access based on user roles." },
+            { category: "Tools", question: "Which category is Splunk?", options: ["Authentication", "Authorization", "Accountability/Logging", "Identification"], correct: 2, explanation: "Splunk is a SIEM tool for accountability - tracking and analyzing logs." },
+            { category: "Controls", question: "Which is NOT a security control?", options: ["Firewall", "Encryption", "Phishing", "MFA"], correct: 2, explanation: "Phishing is a THREAT, not a control. Others are protective controls." },
+            { category: "Authentication", question: "Which factor is 'something you are'?", options: ["Password", "Security token", "Fingerprint", "PIN"], correct: 2, explanation: "Biometrics (fingerprint, face) are 'something you are' - inherence factors." },
+            { category: "Assets", question: "Which is a cybersecurity asset?", options: ["Only hardware", "Only software", "Data, hardware, software, people", "Only network cables"], correct: 2, explanation: "Assets include anything valuable: data, hardware, software, and people." },
+            { category: "Vulnerabilities", question: "What is a vulnerability?", options: ["A malware type", "A weakness that can be exploited", "A security control", "Encryption type"], correct: 1, explanation: "A vulnerability is a weakness threats can exploit (weak passwords, unpatched software)." },
+            { category: "IAAA", question: "What prevented hacker from accessing financial data?", options: ["Identification", "Authentication", "Authorization", "Accountability"], correct: 2, explanation: "Authorization (RBAC) restricted the compromised account's access rights." }
+        ];
+
+        const matchingPairs = [
+            { id: 1, term: "Identification", match: "Who are you?" },
+            { id: 2, term: "Authentication", match: "Prove it!" },
+            { id: 3, term: "Authorization", match: "What can you do?" },
+            { id: 4, term: "Accountability", match: "Keep a record" },
+            { id: 5, term: "Risk", match: "Threat × Vulnerability" },
+            { id: 6, term: "Splunk", match: "SIEM/Logging" },
+            { id: 7, term: "MFA", match: "Multi-Factor Auth" },
+            { id: 8, term: "RBAC", match: "Role-Based Access" },
+            { id: 9, term: "Firewall", match: "Network filter" },
+            { id: 10, term: "Encryption", match: "Data encoding" }
+        ];
+
+        const scenarioSteps = [
+            {
+                title: "🚨 Phase 1: Identification Alert",
+                text: "ALERT: Unknown IP 192.168.1.100 attempting login with CEO credentials (j.smith@company.com). What's your immediate action?",
+                options: [
+                    { text: "Ignore - probably CEO working remotely", correct: false, feedback: "❌ Dangerous! Unknown IPs should never be ignored." },
+                    { text: "Flag for review and check IP reputation", correct: true, feedback: "✅ Correct! Identification means flagging unknown attempts." },
+                    { text: "Immediately block the CEO's account", correct: false, feedback: "❌ Too aggressive. Verify first." },
+                    { text: "Email CEO asking if it's them", correct: false, feedback: "❌ Slow response. Every second counts." }
+                ]
+            },
+            {
+                title: "🔐 Phase 2: Authentication Challenge",
+                text: "Attacker has valid password from data breach! But your bank uses MFA. What happens?",
+                options: [
+                    { text: "Attacker bypasses MFA with SQL injection", correct: false, feedback: "❌ MFA is separate layer. SQL injection doesn't bypass it." },
+                    { text: "Access denied - attacker lacks MFA device", correct: true, feedback: "✅ Correct! Authentication requires both factors." },
+                    { text: "System grants limited access without MFA", correct: false, feedback: "❌ MFA should be enforced, not optional." },
+                    { text: "Attacker calls IT to reset MFA", correct: false, feedback: "❌ Focus on technical controls in this scenario." }
+                ]
+            },
+            {
+                title: "🛡️ Phase 3: Authorization Check",
+                text: "Attacker found compromised intern account (no MFA). They authenticate. What prevents database access?",
+                options: [
+                    { text: "Password expires immediately", correct: false, feedback: "❌ Policy, not immediate technical control." },
+                    { text: "RBAC restricts intern from financial data", correct: true, feedback: "✅ Correct! Authorization via RBAC limits access." },
+                    { text: "Database encryption prevents reading", correct: false, feedback: "❌ Encryption protects at rest, but authorized users can access." },
+                    { text: "Firewall blocks all queries", correct: false, feedback: "❌ Firewalls control network, not app permissions." }
+                ]
+            },
+            {
+                title: "📋 Phase 4: Accountability",
+                text: "Attack stopped! Which demonstrates Accountability?",
+                options: [
+                    { text: "Review Splunk/SIEM logs", correct: true, feedback: "✅ Correct! Accountability requires logging and monitoring." },
+                    { text: "Change intern's password only", correct: false, feedback: "❌ Necessary but not accountability." },
+                    { text: "Install new firewall", correct: false, feedback: "❌ This is preventive control, not accountability." },
+                    { text: "Send company-wide warning email", correct: false, feedback: "❌ Communication, not IAAA accountability." }
+                ]
+            },
+            {
+                title: "🎯 Phase 5: Risk Assessment",
+                text: "Bank had outdated software (vulnerability) and faced credential-stuffing (threat). Risk level?",
+                options: [
+                    { text: "Low - banks are naturally secure", correct: false, feedback: "❌ No system is naturally secure." },
+                    { text: "High - Threat × Vulnerability", correct: true, feedback: "✅ Correct! Active threats + unpatched systems = HIGH RISK." },
+                    { text: "Medium - MFA reduces all risk", correct: false, feedback: "❌ MFA helps but doesn't eliminate all risk." },
+                    { text: "Zero - attack was stopped", correct: false, feedback: "❌ Controls worked, but risk existed." }
+                ]
+            }
+        ];
+
+        let currentMode = 'dashboard', currentCard = 0, knownCards = new Set(), currentQuiz = 0;
+        let quizScore = { correct: 0, wrong: 0 }, streak = 0, totalScore = 0;
+        let matchingState = { selected: null, matched: new Set(), moves: 0, cards: [] }, scenarioStep = 0;
+
+        function init() {
+            renderFlashcardDots();
+            updateProgress();
+        }
+
+        function switchMode(mode) {
+            document.querySelectorAll('.mode-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(mode + '-mode').classList.remove('hidden');
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.mode === mode) btn.classList.add('active');
+            });
+            currentMode = mode;
+            if (mode === 'flashcards') initFlashcards();
+            if (mode === 'quiz') initQuiz();
+            if (mode === 'matching') initMatching();
+            if (mode === 'scenario') initScenario();
+        }
+
+        function initFlashcards() {
+            currentCard = 0;
+            updateFlashcard();
+        }
+
+        function updateFlashcard() {
+            const card = flashcards[currentCard];
+            document.getElementById('flashcard-front').textContent = card.front;
+            document.getElementById('flashcard-back').textContent = card.back;
+            document.getElementById('flashcard-category').textContent = card.category;
+            document.getElementById('flashcard-counter').textContent = `${currentCard + 1} / ${flashcards.length}`;
+            document.getElementById('flashcard').classList.remove('flipped');
+            updateDots();
+        }
+
+        function flipCard() {
+            document.getElementById('flashcard').classList.toggle('flipped');
+        }
+
+        function nextCard() {
+            currentCard = (currentCard + 1) % flashcards.length;
+            updateFlashcard();
+        }
+
+        function prevCard() {
+            currentCard = (currentCard - 1 + flashcards.length) % flashcards.length;
+            updateFlashcard();
+        }
+
+        function markKnown() {
+            knownCards.add(currentCard);
+            totalScore += 10;
+            streak++;
+            updateScore();
+            updateProgress();
+            const card = document.getElementById('flashcard');
+            card.style.boxShadow = '0 0 40px rgba(34, 197, 94, 0.5)';
+            setTimeout(() => {
+                card.style.boxShadow = '';
+                nextCard();
+            }, 500);
+        }
+
+        function shuffleFlashcards() {
+            flashcards.sort(() => Math.random() - 0.5);
+            currentCard = 0;
+            updateFlashcard();
+            renderFlashcardDots();
+        }
+
+        function renderFlashcardDots() {
+            const container = document.getElementById('flashcard-dots');
+            container.innerHTML = '';
+            flashcards.forEach((_, idx) => {
+                const dot = document.createElement('div');
+                dot.className = `h-2 rounded-full transition-all ${knownCards.has(idx) ? 'bg-green-500' : 'bg-slate-700'}`;
+                dot.onclick = () => { currentCard = idx; updateFlashcard(); };
+                container.appendChild(dot);
+            });
+        }
+
+        function updateDots() { renderFlashcardDots(); }
+
+        function initQuiz() {
+            currentQuiz = 0;
+            quizScore = { correct: 0, wrong: 0 };
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const q = quizQuestions[currentQuiz];
+            document.getElementById('quiz-category').textContent = q.category;
+            document.getElementById('quiz-question').textContent = q.question;
+            document.getElementById('quiz-counter').textContent = currentQuiz + 1;
+            const optionsDiv = document.getElementById('quiz-options');
+            optionsDiv.innerHTML = '';
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-option w-full text-left p-4 rounded-lg font-medium';
+                btn.textContent = `${String.fromCharCode(65 + idx)}. ${opt}`;
+                btn.onclick = () => selectAnswer(idx);
+                optionsDiv.appendChild(btn);
+            });
+            document.getElementById('quiz-explanation').classList.add('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+            document.getElementById('correct-count').textContent = quizScore.correct;
+            document.getElementById('wrong-count').textContent = quizScore.wrong;
+        }
+
+        function selectAnswer(idx) {
+            const q = quizQuestions[currentQuiz];
+            const options = document.querySelectorAll('.quiz-option');
+            const explanation = document.getElementById('quiz-explanation');
+            const expTitle = document.getElementById('explanation-title');
+            const expText = document.getElementById('explanation-text');
+
+            options.forEach((opt, i) => {
+                opt.style.pointerEvents = 'none';
+                if (i === q.correct) opt.classList.add('correct');
+                else if (i === idx && i !== q.correct) opt.classList.add('wrong');
+            });
+
+            if (idx === q.correct) {
+                quizScore.correct++;
+                totalScore += 20;
+                streak++;
+                expTitle.textContent = '✅ Correct!';
+                expTitle.className = 'font-semibold mb-2 text-green-400';
+                createConfetti();
+            } else {
+                quizScore.wrong++;
+                streak = 0;
+                expTitle.textContent = '❌ Incorrect';
+                expTitle.className = 'font-semibold mb-2 text-red-400';
+            }
+
+            expText.textContent = q.explanation;
+            explanation.classList.remove('hidden');
+            document.getElementById('next-btn').classList.remove('hidden');
+            document.getElementById('correct-count').textContent = quizScore.correct;
+            document.getElementById('wrong-count').textContent = quizScore.wrong;
+            updateScore();
+            updateProgress();
+        }
+
+        function nextQuestion() {
+            currentQuiz++;
+            if (currentQuiz >= quizQuestions.length) {
+                currentQuiz = 0;
+                quizScore = { correct: 0, wrong: 0 };
+            }
+            loadQuestion();
+        }
+
+        function initMatching() {
+            matchingState = { selected: null, matched: new Set(), moves: 0, cards: [] };
+            const shuffled = [...matchingPairs].sort(() => Math.random() - 0.5).slice(0, 5);
+            const cards = [];
+            shuffled.forEach(pair => {
+                cards.push({ id: pair.id, text: pair.term, type: 'term', matchId: pair.id });
+                cards.push({ id: pair.id + '_def', text: pair.match, type: 'def', matchId: pair.id });
+            });
+            matchingState.cards = cards.sort(() => Math.random() - 0.5);
+            renderMatchingGrid();
+            document.getElementById('matching-complete').classList.add('hidden');
+        }
+
+        function renderMatchingGrid() {
+            const grid = document.getElementById('matching-grid');
+            grid.innerHTML = '';
+            matchingState.cards.forEach((card, idx) => {
+                const div = document.createElement('div');
+                const isMatched = matchingState.matched.has(card.matchId);
+                const isSelected = matchingState.selected === idx;
+                div.className = `match-card rounded-lg font-semibold text-sm ${isMatched ? 'matched' : ''} ${isSelected ? 'selected' : ''}`;
+                if (!isMatched) div.onclick = () => selectMatchCard(idx);
+                div.textContent = card.text;
+                grid.appendChild(div);
+            });
+            document.getElementById('moves-count').textContent = matchingState.moves;
+            document.getElementById('pairs-found').textContent = matchingState.matched.size;
+        }
+
+        function selectMatchCard(idx) {
+            if (matchingState.selected === null) {
+                matchingState.selected = idx;
+            } else if (matchingState.selected === idx) {
+                matchingState.selected = null;
+            } else {
+                const card1 = matchingState.cards[matchingState.selected];
+                const card2 = matchingState.cards[idx];
+                matchingState.moves++;
+
+                if (card1.matchId === card2.matchId) {
+                    matchingState.matched.add(card1.matchId);
+                    totalScore += 50;
+                    streak++;
+                    createConfetti();
+                    if (matchingState.matched.size === 5) {
+                        setTimeout(() => {
+                            document.getElementById('final-moves').textContent = matchingState.moves;
+                            document.getElementById('matching-complete').classList.remove('hidden');
+                            totalScore += 100;
+                            updateScore();
+                            updateProgress();
+                        }, 500);
+                    }
+                } else {
+                    streak = 0;
+                    const cards = document.querySelectorAll('.match-card');
+                    cards[matchingState.selected].style.borderColor = '#ef4444';
+                    cards[idx].style.borderColor = '#ef4444';
+                    setTimeout(() => {
+                        cards[matchingState.selected].style.borderColor = '';
+                        cards[idx].style.borderColor = '';
+                    }, 500);
+                }
+                matchingState.selected = null;
+                updateScore();
+            }
+            renderMatchingGrid();
+        }
+
+        function resetMatching() { initMatching(); }
+
+        function initScenario() {
+            scenarioStep = 0;
+            loadScenarioStep();
+        }
+
+        function loadScenarioStep() {
+            const step = scenarioSteps[scenarioStep];
+            document.getElementById('scenario-title').textContent = step.title;
+            document.getElementById('scenario-text').textContent = step.text;
+            const optionsDiv = document.getElementById('scenario-options');
+            optionsDiv.innerHTML = '';
+            step.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full text-left p-4 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-cyan-500/50 hover:bg-slate-800 transition-all';
+                btn.textContent = opt.text;
+                btn.onclick = () => selectScenarioOption(idx);
+                optionsDiv.appendChild(btn);
+            });
+            document.getElementById('scenario-feedback').classList.add('hidden');
+            document.getElementById('scenario-progress').style.width = `${(scenarioStep / scenarioSteps.length) * 100}%`;
+        }
+
+        function selectScenarioOption(idx) {
+            const step = scenarioSteps[scenarioStep];
+            const option = step.options[idx];
+            const feedback = document.getElementById('scenario-feedback');
+            const feedbackTitle = document.getElementById('feedback-title');
+            const feedbackText = document.getElementById('feedback-text');
+
+            document.querySelectorAll('#scenario-options button').forEach(btn => btn.style.pointerEvents = 'none');
+
+            feedback.classList.remove('hidden');
+            feedbackTitle.textContent = option.correct ? '✅ Correct Action' : '❌ Incorrect';
+            feedbackTitle.className = `font-semibold mb-2 ${option.correct ? 'text-green-400' : 'text-red-400'}`;
+            feedbackText.textContent = option.feedback;
+            feedback.className = `mt-6 p-4 rounded-lg border ${option.correct ? 'bg-green-900/20 border-green-500/30' : 'bg-red-900/20 border-red-500/30'}`;
+
+            if (option.correct) {
+                totalScore += 30;
+                streak++;
+                createConfetti();
+                setTimeout(() => {
+                    scenarioStep++;
+                    if (scenarioStep >= scenarioSteps.length) {
+                        scenarioStep = 0;
+                        totalScore += 50;
+                    }
+                    loadScenarioStep();
+                    updateScore();
+                }, 2500);
+            } else {
+                streak = 0;
+                setTimeout(() => {
+                    document.querySelectorAll('#scenario-options button').forEach(btn => btn.style.pointerEvents = 'auto');
+                }, 1000);
+            }
+            updateScore();
+        }
+
+        function resetScenario() { initScenario(); }
+
+        function showDetail(type) {
+            const details = {
+                identification: {
+                    content: `<h3 class="text-xl font-bold text-cyan-400 mb-4">👤 Identification: 'Who are you?'</h3>
+                    <p class="mb-4">The first step where a user claims their identity.</p>
+                    <div class="space-y-3">
+                        <div class="bg-slate-800/50 p-3 rounded-lg"><div class="font-semibold text-cyan-400">Examples:</div>
+                        <ul class="list-disc list-inside text-sm text-slate-300 mt-2"><li>Username or email</li><li>Employee ID</li><li>Account number</li><li>Google/Facebook Login</li></ul></div>
+                        <div class="bg-slate-800/50 p-3 rounded-lg border border-cyan-500/30"><div class="font-semibold text-cyan-400">💡 Key Point:</div>
+                        <p class="text-sm text-slate-300 mt-1">Identification alone is NOT secure - anyone can claim to be "admin"</p></div>
+                    </div>`
+                },
+                authentication: {
+                    content: `<h3 class="text-xl font-bold text-purple-400 mb-4">🔐 Authentication: 'Prove it!'</h3>
+                    <p class="mb-4">Verifying the user is who they claim to be.</p>
+                    <div class="space-y-3">
+                        <div class="bg-slate-800/50 p-3 rounded-lg"><div class="font-semibold text-purple-400">Three Factors:</div>
+                        <ul class="text-sm text-slate-300 mt-2 space-y-2">
+                        <li><span class="text-purple-400">1.</span> <strong>Something you KNOW</strong> - Password, PIN</li>
+                        <li><span class="text-purple-400">2.</span> <strong>Something you HAVE</strong> - Phone, token</li>
+                        <li><span class="text-purple-400">3.</span> <strong>Something you ARE</strong> - Fingerprint, face</li></ul></div>
+                        <div class="bg-slate-800/50 p-3 rounded-lg border border-purple-500/30"><div class="font-semibold text-purple-400">🛠 Tools:</div>
+                        <p class="text-sm text-slate-300 mt-1">Google/Microsoft Authenticator, Duo, YubiKey</p></div>
+                    </div>`
+                },
+                authorization: {
+                    content: `<h3 class="text-xl font-bold text-pink-400 mb-4">🛡️ Authorization: 'What can you do?'</h3>
+                    <p class="mb-4">Determining what resources an authenticated user can access.</p>
+                    <div class="space-y-3">
+                        <div class="bg-slate-800/50 p-3 rounded-lg"><div class="font-semibold text-pink-400">Key Concepts:</div>
+                        <ul class="text-sm text-slate-300 mt-2 space-y-2">
+                        <li><strong>RBAC</strong> - Role-Based Access Control</li>
+                        <li><strong>Least Privilege</strong> - Minimum access necessary</li>
+                        <li><strong>Permissions</strong> - Read, Write, Execute</li></ul></div>
+                        <div class="bg-slate-800/50 p-3 rounded-lg border border-pink-500/30"><div class="font-semibold text-pink-400">🛠 Tools:</div>
+                        <p class="text-sm text-slate-300 mt-1">AWS IAM, OAuth 2.0, Active Directory</p></div>
+                    </div>`
+                },
+                accountability: {
+                    content: `<h3 class="text-xl font-bold text-emerald-400 mb-4">📋 Accountability: 'Keep a record'</h3>
+                    <p class="mb-4">Tracking and logging user actions for audit and forensics.</p>
+                    <div class="space-y-3">
+                        <div class="bg-slate-800/50 p-3 rounded-lg"><div class="font-semibold text-emerald-400">Why it matters:</div>
+                        <ul class="text-sm text-slate-300 mt-2 space-y-1">
+                        <li>• Detect suspicious behavior</li><li>• Trace intruder steps</li>
+                        <li>• Compliance (GDPR, HIPAA)</li><li>• Forensic evidence</li></ul></div>
+                        <div class="bg-slate-800/50 p-3 rounded-lg border border-emerald-500/30"><div class="font-semibold text-emerald-400">🛠 Tools:</div>
+                        <p class="text-sm text-slate-300 mt-1">Splunk, Graylog, ELK Stack, IBM QRadar</p></div>
+                    </div>`
+                }
+            };
+            document.getElementById('detail-content').innerHTML = details[type].content;
+            document.getElementById('detail-modal').classList.remove('hidden');
+            document.getElementById('detail-modal').classList.add('flex');
+        }
+
+        function showConcept(type) {
+            const concepts = {
+                assets: { content: `<h3 class="text-xl font-bold text-cyan-400 mb-4">💎 Assets</h3><p class="mb-4">Anything valuable needing protection.</p><div class="grid grid-cols-2 gap-3"><div class="bg-slate-800/50 p-3 rounded-lg"><div class="font-semibold text-cyan-400">Data</div><p class="text-sm text-slate-300">Customer records, financial data, IP</p></div><div class="bg-slate-800/50 p-3 rounded-lg"><div class="font-semibold text-cyan-400">Physical</div><p class="text-sm text-slate-300">Servers, workstations, network gear</p></div></div>` },
+                threats: { content: `<h3 class="text-xl font-bold text-red-400 mb-4">⚠️ Threats</h3><p class="mb-4">Anything that can exploit vulnerabilities.</p><div class="grid grid-cols-2 gap-2 text-sm"><div class="bg-slate-800/50 p-2 rounded">🎣 Phishing</div><div class="bg-slate-800/50 p-2 rounded">🦠 Malware</div><div class="bg-slate-800/50 p-2 rounded">💥 DDoS</div><div class="bg-slate-800/50 p-2 rounded">🕵️ Insider threats</div></div>` },
+                vulnerabilities: { content: `<h3 class="text-xl font-bold text-yellow-400 mb-4">🔓 Vulnerabilities</h3><p class="mb-4">Weaknesses that threats can exploit.</p><ul class="space-y-2 text-sm"><li class="bg-slate-800/50 p-2 rounded">• Outdated/unpatched software</li><li class="bg-slate-800/50 p-2 rounded">• Weak passwords</li><li class="bg-slate-800/50 p-2 rounded">• Human error/social engineering</li><li class="bg-slate-800/50 p-2 rounded">• Misconfigured systems</li></ul>` },
+                risk: { content: `<h3 class="text-xl font-bold text-orange-400 mb-4">⚡ Risk</h3><div class="bg-slate-900/50 rounded-lg p-4 font-mono text-center mb-4"><div class="text-xl font-bold text-white">Risk =</div><div class="flex items-center justify-center gap-2 text-lg"><span class="text-red-400">Threat</span><span class="text-slate-500">×</span><span class="text-yellow-400">Vulnerability</span></div></div><p class="text-sm">Risk is the <strong>likelihood</strong> of a threat exploiting a vulnerability to cause damage.</p>` },
+                controls: { content: `<h3 class="text-xl font-bold text-green-400 mb-4">🛡️ Controls</h3><p class="mb-4">Safeguards to reduce risk and protect assets.</p><div class="grid grid-cols-2 gap-2 text-sm"><div class="bg-slate-800/50 p-2 rounded">🔥 Firewalls</div><div class="bg-slate-800/50 p-2 rounded">🔐 Encryption</div><div class="bg-slate-800/50 p-2 rounded">📱 MFA</div><div class="bg-slate-800/50 p-2 rounded">🎓 Training</div></div>` },
+                iaaa: { content: `<h3 class="text-xl font-bold text-blue-400 mb-4">🛠️ IAAA Tools</h3><div class="space-y-2 text-sm"><div class="bg-slate-800/50 p-2 rounded flex justify-between"><span>Identification</span><span class="text-blue-400">Google Sign-In</span></div><div class="bg-slate-800/50 p-2 rounded flex justify-between"><span>Authentication</span><span class="text-blue-400">Duo, Authenticator</span></div><div class="bg-slate-800/50 p-2 rounded flex justify-between"><span>Authorization</span><span class="text-blue-400">AWS IAM, OAuth2</span></div><div class="bg-slate-800/50 p-2 rounded flex justify-between"><span>Accountability</span><span class="text-blue-400">Splunk, SIEM</span></div></div>` }
+            };
+            document.getElementById('detail-content').innerHTML = concepts[type].content;
+            document.getElementById('detail-modal').classList.remove('hidden');
+            document.getElementById('detail-modal').classList.add('flex');
+        }
+
+        function closeDetail() {
+            document.getElementById('detail-modal').classList.add('hidden');
+            document.getElementById('detail-modal').classList.remove('flex');
+        }
+
+        function updateScore() {
+            document.getElementById('score-display').textContent = `Score: ${totalScore}`;
+            document.getElementById('streak-display').textContent = `Streak: ${streak}`;
+        }
+
+        function updateProgress() {
+            const flashPercent = (knownCards.size / flashcards.length) * 100;
+            document.getElementById('flash-progress').textContent = `${knownCards.size}/${flashcards.length}`;
+            document.getElementById('flash-bar').style.width = `${flashPercent}%`;
+
+            const quizTotal = quizScore.correct + quizScore.wrong;
+            const quizPercent = quizTotal > 0 ? (quizScore.correct / quizTotal) * 100 : 0;
+            document.getElementById('quiz-progress').textContent = `${Math.round(quizPercent)}%`;
+            document.getElementById('quiz-bar').style.width = `${quizPercent}%`;
+
+            const matchPairs = matchingState.matched ? matchingState.matched.size : 0;
+            document.getElementById('match-progress').textContent = `${matchPairs}/5`;
+            document.getElementById('match-bar').style.width = `${(matchPairs / 5) * 100}%`;
+        }
+
+        function createConfetti() {
+            for (let i = 0; i < 20; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.backgroundColor = ['#06b6d4', '#8b5cf6', '#ec4899', '#22c55e'][Math.floor(Math.random() * 4)];
+                confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                document.body.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 3000);
+            }
+        }
+
+        // Initialize
+        init();
+    </script>
+</body>
+</html>
