@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecture X - InfoSec Course</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0e27;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: rgba(10, 14, 39, 0.95);
+            border-bottom: 1px solid #1e3a8a;
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-brand {
+            color: #00d4ff;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .nav-links a {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #00d4ff;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .lecture-header {
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid #1e3a8a;
+        }
+
+        .lecture-number {
+            color: #00d4ff;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 0.5rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #f0f9ff;
+            margin-bottom: 1rem;
+        }
+
+        .content {
+            background: rgba(30, 58, 138, 0.1);
+            border: 1px solid #1e3a8a;
+            border-radius: 12px;
+            padding: 2rem;
+            line-height: 1.8;
+        }
+
+        .content h2 {
+            color: #00d4ff;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .content p {
+            margin-bottom: 1rem;
+            color: #cbd5e1;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid #00d4ff;
+            color: #00d4ff;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s;
+            margin-top: 2rem;
+        }
+
+        .back-btn:hover {
+            background: rgba(0, 212, 255, 0.2);
+            transform: translateX(-5px);
+        }
+
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            h1 { font-size: 1.8rem; }
+            .container { padding: 2rem 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="../index.html" class="nav-brand">← InfoSec Dashboard</a>
+        <div class="nav-links">
+            <a href="../Lecture1/index.html">Lec 1</a>
+            <a href="../Lecture2/index.html">Lec 2</a>
+            <a href="../Lecture3/index.html">Lec 3</a>
+            <a href="../Lecture4/index.html">Lec 4</a>
+            <a href="../Lecture5/index.html">Lec 5</a>
+            <a href="../LabExam/index.html">Lab</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="lecture-header">
+            <div class="lecture-number">Lecture X</div>
+            <h1>Lecture Title Here</h1>
+            <p style="color: #64748b; font-size: 1.1rem;">Brief description of the lecture content.</p>
+        </div>
+
+        <div class="content">
+            <!-- Your existing lecture content goes here -->
+            <h2>Introduction</h2>
+            <p>Start migrating your existing LectureX.html content here...</p>
+            
+            <h2>Key Concepts</h2>
+            <p>Add your slides, notes, or embedded content here.</p>
+
+            <h2>Practical Exercises</h2>
+            <p>Lab materials and exercises.</p>
+        </div>
+
+        <a href="../index.html" class="back-btn">← Back to Dashboard</a>
+    </div>
+</body>
+</html>
